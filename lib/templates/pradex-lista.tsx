@@ -27,16 +27,21 @@ const COLORS = {
 };
 
 function comItalico(s: string): React.ReactNode {
-  // Trim bordas de partes nao-italic + gap no flex parent.
   const raw = s.split('~');
-  return raw.map((p, i) => {
-    if (i % 2 === 1) {
-      return <span key={i} style={{ fontStyle: 'italic' }}>{p}</span>;
-    }
+  const out: React.ReactNode[] = [];
+  raw.forEach((p, i) => {
     const trimmed = p.replace(/^[\s\u00A0]+|[\s\u00A0]+$/g, '');
-    if (!trimmed) return null;
-    return <span key={i}>{trimmed}</span>;
-  }).filter(Boolean);
+    if (!trimmed) return;
+    if (out.length > 0) {
+      out.push(<span key={`sep-${i}`}>&nbsp;</span>);
+    }
+    if (i % 2 === 1) {
+      out.push(<span key={i} style={{ fontStyle: 'italic' }}>{trimmed}</span>);
+    } else {
+      out.push(<span key={i}>{trimmed}</span>);
+    }
+  });
+  return out;
 }
 
 /**
@@ -258,6 +263,4 @@ export const PradexLista: React.FC<Props> = ({
               display: 'flex',
               alignItems: 'center',
               color: COLORS.accent,
-              fontFamily: 'Playfair',
-              fontStyle: 'italic',
-         
+  

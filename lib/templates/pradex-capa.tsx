@@ -26,16 +26,22 @@ const COLORS = {
  * Ex: "Antes de investir, ~organize-se~." vira ["Antes de investir, ", <i>organize-se</i>, "."]
  */
 function renderTituloComItalico(titulo: string): React.ReactNode {
-  // Trim bordas de partes nao-italic + gap no flex parent.
+  // Separador explicito (&nbsp; em span proprio) entre as partes.
   const raw = titulo.split('~');
-  return raw.map((p, i) => {
-    if (i % 2 === 1) {
-      return <span key={i} style={{ fontStyle: 'italic' }}>{p}</span>;
-    }
+  const out: React.ReactNode[] = [];
+  raw.forEach((p, i) => {
     const trimmed = p.replace(/^[\s\u00A0]+|[\s\u00A0]+$/g, '');
-    if (!trimmed) return null;
-    return <span key={i}>{trimmed}</span>;
-  }).filter(Boolean);
+    if (!trimmed) return;
+    if (out.length > 0) {
+      out.push(<span key={`sep-${i}`}>&nbsp;</span>);
+    }
+    if (i % 2 === 1) {
+      out.push(<span key={i} style={{ fontStyle: 'italic' }}>{trimmed}</span>);
+    } else {
+      out.push(<span key={i}>{trimmed}</span>);
+    }
+  });
+  return out;
 }
 
 /**
@@ -216,12 +222,4 @@ export const PradexCapa: React.FC<Props> = ({
           style={{
             color: COLORS.accent,
             fontFamily: 'Inter',
-            fontWeight: 700,
-            fontSize: 32,
-            letterSpacing: 1,
-          }}
-        >
-          {rodapeEsq}
-        </div>
-        <div
-         
+            fontWeig
