@@ -25,22 +25,20 @@ const COLORS = {
  * Quebra o título em pedaços renderizando ~itálico~ como <i>.
  * Ex: "Antes de investir, ~organize-se~." vira ["Antes de investir, ", <i>organize-se</i>, "."]
  */
-function renderTituloComItalico(titulo: string): React.ReactNode[] {
+function renderTituloComItalico(titulo: string): React.ReactNode {
+  // Retorna span container; trecho ~marcado~ vira inner span italic (herda cor do parent).
   const parts = titulo.split('~');
-  return parts.map((part, idx) => {
-    if (idx % 2 === 1) {
-      return (
-        <span key={idx} style={{ fontStyle: 'italic' }}>
-          {part}
-        </span>
-      );
-    }
-    // Satori junta flex items sem preservar espaço de borda. Forçar com nbsp.
-    let fixed = part;
-    if (fixed.startsWith(' ')) fixed = ' ' + fixed.slice(1);
-    if (fixed.endsWith(' ')) fixed = fixed.slice(0, -1) + ' ';
-    return <span key={idx}>{fixed}</span>;
-  });
+  return (
+    <span style={{ display: 'flex', flexWrap: 'wrap' }}>
+      {parts.map((p, i) =>
+        i % 2 === 1 ? (
+          <span key={i} style={{ fontStyle: 'italic' }}>{p}</span>
+        ) : (
+          <span key={i}>{p}</span>
+        ),
+      )}
+    </span>
+  );
 }
 
 /**
@@ -228,17 +226,4 @@ export const PradexCapa: React.FC<Props> = ({
           {rodapeEsq}
         </div>
         <div
-          style={{
-            color: COLORS.inkSoft,
-            fontFamily: 'Inter',
-            fontWeight: 400,
-            fontSize: 26,
-            letterSpacing: 0.5,
-          }}
-        >
-          {rodapeDir}
-        </div>
-      </div>
-    </div>
-  </div>
-);
+         

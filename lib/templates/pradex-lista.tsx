@@ -26,20 +26,20 @@ const COLORS = {
   frame: '#1A1A1A',
 };
 
-function comItalico(s: string): React.ReactNode[] {
-  return s.split('~').map((p, i) => {
-    if (i % 2 === 1) {
-      return (
-        <span key={i} style={{ fontStyle: 'italic' }}>
-          {p}
-        </span>
-      );
-    }
-    let fixed = p;
-    if (fixed.startsWith(' ')) fixed = ' ' + fixed.slice(1);
-    if (fixed.endsWith(' ')) fixed = fixed.slice(0, -1) + ' ';
-    return <span key={i}>{fixed}</span>;
-  });
+function comItalico(s: string): React.ReactNode {
+  // Retorna span container; trecho ~marcado~ vira inner span italic (herda cor do parent).
+  const parts = s.split('~');
+  return (
+    <span style={{ display: 'flex', flexWrap: 'wrap' }}>
+      {parts.map((p, i) =>
+        i % 2 === 1 ? (
+          <span key={i} style={{ fontStyle: 'italic' }}>{p}</span>
+        ) : (
+          <span key={i}>{p}</span>
+        ),
+      )}
+    </span>
+  );
 }
 
 /**
@@ -262,14 +262,4 @@ export const PradexLista: React.FC<Props> = ({
               color: COLORS.accent,
               fontFamily: 'Playfair',
               fontStyle: 'italic',
-              fontWeight: 600,
-              fontSize: 40,
-            }}
-          >
-            {proximoTitulo} ›
-          </div>
-        </div>
-      ) : null}
-    </div>
-  </div>
-);
+         

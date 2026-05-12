@@ -27,21 +27,23 @@ const COLORS = {
   frame: '#1A1A1A',
 };
 
-function comItalico(s: string): React.ReactNode[] {
-  return s.split('~').map((p, i) => {
-    if (i % 2 === 1) {
-      return (
-        <span key={i} style={{ fontStyle: 'italic', color: COLORS.accent }}>
-          {p}
-        </span>
-      );
-    }
-    // Satori junta flex items sem preservar espaço de borda. Forçar com nbsp.
-    let fixed = p;
-    if (fixed.startsWith(' ')) fixed = ' ' + fixed.slice(1);
-    if (fixed.endsWith(' ')) fixed = fixed.slice(0, -1) + ' ';
-    return <span key={i}>{fixed}</span>;
-  });
+function comItalico(s: string): React.ReactNode {
+  // Retorna span container; trecho ~marcado~ vira inner span italic accent.
+  // Permite Satori manter whitespace ao redor dos trechos.
+  const parts = s.split('~');
+  return (
+    <span style={{ display: 'flex', flexWrap: 'wrap' }}>
+      {parts.map((p, i) =>
+        i % 2 === 1 ? (
+          <span key={i} style={{ fontStyle: 'italic', color: COLORS.accent }}>
+            {p}
+          </span>
+        ) : (
+          <span key={i}>{p}</span>
+        ),
+      )}
+    </span>
+  );
 }
 
 /**
@@ -247,16 +249,4 @@ export const PradexConceito: React.FC<Props> = ({
               display: 'flex',
               alignItems: 'center',
               color: COLORS.accent,
-              fontFamily: 'Playfair',
-              fontStyle: 'italic',
-              fontWeight: 600,
-              fontSize: 40,
-            }}
-          >
-            {proximoTitulo} ›
-          </div>
-        </div>
-      ) : null}
-    </div>
-  </div>
-);
+ 
