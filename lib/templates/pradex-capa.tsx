@@ -27,15 +27,20 @@ const COLORS = {
  */
 function renderTituloComItalico(titulo: string): React.ReactNode[] {
   const parts = titulo.split('~');
-  return parts.map((part, idx) =>
-    idx % 2 === 1 ? (
-      <span key={idx} style={{ fontStyle: 'italic' }}>
-        {part}
-      </span>
-    ) : (
-      <span key={idx}>{part}</span>
-    ),
-  );
+  return parts.map((part, idx) => {
+    if (idx % 2 === 1) {
+      return (
+        <span key={idx} style={{ fontStyle: 'italic' }}>
+          {part}
+        </span>
+      );
+    }
+    // Satori junta flex items sem preservar espaço de borda. Forçar com nbsp.
+    let fixed = part;
+    if (fixed.startsWith(' ')) fixed = ' ' + fixed.slice(1);
+    if (fixed.endsWith(' ')) fixed = fixed.slice(0, -1) + ' ';
+    return <span key={idx}>{fixed}</span>;
+  });
 }
 
 /**
