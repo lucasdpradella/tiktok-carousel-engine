@@ -10,19 +10,24 @@ export const config = { runtime: 'edge' };
 const WIDTH = 1080;
 const HEIGHT = 1920;
 
-// ── Fontes carregadas em runtime (Google Fonts CDN — Latin subset) ────
-// Inter v20 e Playfair Display v40 são variable fonts:
-//   - Inter normal: 1 URL serve 400/700/800
-//   - Playfair Display: 1 URL pra normal, outra pra italic (variable axes)
-// URLs auditadas em 2026-05-12 contra fonts.googleapis.com/css2.
-// Se quebrarem, refazer via: fetch('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&display=swap') e pegar as URLs Latin (unicode-range U+0000-00FF).
+// ── Fontes carregadas em runtime (jsDelivr + fontsource — formato TTF) ──
+// Satori (engine do @vercel/og) NÃO suporta WOFF2 — só TTF/OTF.
+// jsDelivr serve TTF do projeto fontsource com URLs estáveis e versionadas.
 const FONT_URLS = {
-  interLatin:
-    'https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2',
-  playfairLatinNormal:
-    'https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgA.woff2',
-  playfairLatinItalic:
-    'https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnogkk7.woff2',
+  interRegular:
+    'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.ttf',
+  interBold:
+    'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.ttf',
+  interExtraBold:
+    'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-800-normal.ttf',
+  playfairRegular:
+    'https://cdn.jsdelivr.net/fontsource/fonts/playfair-display@latest/latin-500-normal.ttf',
+  playfairBold:
+    'https://cdn.jsdelivr.net/fontsource/fonts/playfair-display@latest/latin-700-normal.ttf',
+  playfairItalic:
+    'https://cdn.jsdelivr.net/fontsource/fonts/playfair-display@latest/latin-500-italic.ttf',
+  playfairBoldItalic:
+    'https://cdn.jsdelivr.net/fontsource/fonts/playfair-display@latest/latin-700-italic.ttf',
 };
 
 async function loadFonts() {
@@ -31,20 +36,23 @@ async function loadFonts() {
     if (!res.ok) throw new Error(`font fetch failed (${res.status}): ${url}`);
     return await res.arrayBuffer();
   };
-  const [inter, pfNormal, pfItalic] = await Promise.all([
-    fetchFont(FONT_URLS.interLatin),
-    fetchFont(FONT_URLS.playfairLatinNormal),
-    fetchFont(FONT_URLS.playfairLatinItalic),
+  const [inR, inB, inEB, pfR, pfB, pfI, pfBI] = await Promise.all([
+    fetchFont(FONT_URLS.interRegular),
+    fetchFont(FONT_URLS.interBold),
+    fetchFont(FONT_URLS.interExtraBold),
+    fetchFont(FONT_URLS.playfairRegular),
+    fetchFont(FONT_URLS.playfairBold),
+    fetchFont(FONT_URLS.playfairItalic),
+    fetchFont(FONT_URLS.playfairBoldItalic),
   ]);
-  // Mesmo binário serve múltiplos weights pq são variable fonts; Satori usa o weight do estilo declarado.
   return [
-    { name: 'Inter', data: inter, weight: 400 as const, style: 'normal' as const },
-    { name: 'Inter', data: inter, weight: 700 as const, style: 'normal' as const },
-    { name: 'Inter', data: inter, weight: 800 as const, style: 'normal' as const },
-    { name: 'Playfair', data: pfNormal, weight: 500 as const, style: 'normal' as const },
-    { name: 'Playfair', data: pfNormal, weight: 700 as const, style: 'normal' as const },
-    { name: 'Playfair', data: pfItalic, weight: 500 as const, style: 'italic' as const },
-    { name: 'Playfair', data: pfItalic, weight: 700 as const, style: 'italic' as const },
+    { name: 'Inter', data: inR, weight: 400 as const, style: 'normal' as const },
+    { name: 'Inter', data: inB, weight: 700 as const, style: 'normal' as const },
+    { name: 'Inter', data: inEB, weight: 800 as const, style: 'normal' as const },
+    { name: 'Playfair', data: pfR, weight: 500 as const, style: 'normal' as const },
+    { name: 'Playfair', data: pfB, weight: 700 as const, style: 'normal' as const },
+    { name: 'Playfair', data: pfI, weight: 500 as const, style: 'italic' as const },
+    { name: 'Playfair', data: pfBI, weight: 700 as const, style: 'italic' as const },
   ];
 }
 
