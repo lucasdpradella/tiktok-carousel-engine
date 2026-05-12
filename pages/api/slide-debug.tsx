@@ -9,7 +9,7 @@ export const config = { runtime: 'edge' };
  *
  * Mesmo input ("A conta ~certa~.") renderizado de 3 jeitos:
  *   A) flex + spans (estado atual em prod, BUG: "A contacerta.")
- *   B) block + text nodes JSX (Plano B proposto)
+ *   B) flex + Fragment text nodes (Plano B revisado)
  *   C) flex + separator-span com nbsp (5a tentativa, já provada falha)
  *
  * Espera-se que B renderize "A conta certa." com espaços corretos.
@@ -62,11 +62,11 @@ const renderA = (s: string) => {
   );
 };
 
-// B — block + text nodes JSX (Plano B proposto)
+// B — flex + Fragment text nodes (Plano B revisado)
 const renderB = (s: string) => {
   const raw = s.split('~');
   return (
-    <div style={{ display: 'block', fontFamily: 'Playfair', fontSize: 80, color: COLORS.ink, lineHeight: 1 }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', fontFamily: 'Playfair', fontSize: 80, color: COLORS.ink, lineHeight: 1 }}>
       {raw.map((p, i) =>
         i % 2 === 1
           ? <span key={i} style={{ fontStyle: 'italic', color: COLORS.accent }}>{p}</span>

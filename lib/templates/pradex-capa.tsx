@@ -135,10 +135,11 @@ export const PradexCapa: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Titulo serif gigante -- display:block pra Satori tratar como fluxo de texto */}
+      {/* Titulo serif gigante -- flex com text nodes (preserva whitespace) */}
       <div
         style={{
-          display: 'block',
+          display: 'flex',
+          flexWrap: 'wrap',
           color: COLORS.ink,
           fontFamily: 'Playfair',
           fontWeight: 700,

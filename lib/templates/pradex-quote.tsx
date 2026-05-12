@@ -112,10 +112,11 @@ export const PradexQuote: React.FC<Props> = ({
         “
       </div>
 
-      {/* Quote -- display:block pra Satori tratar como fluxo de texto */}
+      {/* Quote -- flex com text nodes (preserva whitespace) */}
       <div
         style={{
-          display: 'block',
+          display: 'flex',
+          flexWrap: 'wrap',
           color: COLORS.ink,
           fontFamily: 'Playfair',
           fontWeight: 500,

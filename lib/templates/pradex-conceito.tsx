@@ -110,10 +110,11 @@ export const PradexConceito: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Titulo principal -- display:block pra Satori tratar como fluxo de texto */}
+      {/* Titulo principal -- flex com text nodes (preserva whitespace) */}
       <div
         style={{
-          display: 'block',
+          display: 'flex',
+          flexWrap: 'wrap',
           color: COLORS.ink,
           fontFamily: 'Playfair',
           fontWeight: 700,
@@ -156,10 +157,11 @@ export const PradexConceito: React.FC<Props> = ({
         </div>
       ) : null}
 
-      {/* Destaque (ideia certa) -- display:block, mesmo padrao do titulo */}
+      {/* Destaque (ideia certa) -- flex com text nodes (preserva whitespace) */}
       <div
         style={{
-          display: 'block',
+          display: 'flex',
+          flexWrap: 'wrap',
           color: COLORS.ink,
           fontFamily: 'Playfair',
           fontWeight: 700,

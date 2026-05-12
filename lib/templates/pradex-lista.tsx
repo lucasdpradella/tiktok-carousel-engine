@@ -107,10 +107,11 @@ export const PradexLista: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Titulo -- display:block pra Satori tratar como fluxo de texto */}
+      {/* Titulo -- flex com text nodes (preserva whitespace) */}
       <div
         style={{
-          display: 'block',
+          display: 'flex',
+          flexWrap: 'wrap',
           color: COLORS.ink,
           fontFamily: 'Playfair',
           fontWeight: 700,
