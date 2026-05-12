@@ -26,19 +26,16 @@ const COLORS = {
  * Ex: "Antes de investir, ~organize-se~." vira ["Antes de investir, ", <i>organize-se</i>, "."]
  */
 function renderTituloComItalico(titulo: string): React.ReactNode {
-  // Retorna span container; trecho ~marcado~ vira inner span italic (herda cor do parent).
-  const parts = titulo.split('~');
-  return (
-    <span style={{ display: 'flex', flexWrap: 'wrap' }}>
-      {parts.map((p, i) =>
-        i % 2 === 1 ? (
-          <span key={i} style={{ fontStyle: 'italic' }}>{p}</span>
-        ) : (
-          <span key={i}>{p}</span>
-        ),
-      )}
-    </span>
-  );
+  // Trim bordas de partes nao-italic + gap no flex parent.
+  const raw = titulo.split('~');
+  return raw.map((p, i) => {
+    if (i % 2 === 1) {
+      return <span key={i} style={{ fontStyle: 'italic' }}>{p}</span>;
+    }
+    const trimmed = p.replace(/^[\s\u00A0]+|[\s\u00A0]+$/g, '');
+    if (!trimmed) return null;
+    return <span key={i}>{trimmed}</span>;
+  }).filter(Boolean);
 }
 
 /**
@@ -148,6 +145,7 @@ export const PradexCapa: React.FC<Props> = ({
           letterSpacing: -2,
           marginTop: 10,
           flexWrap: 'wrap',
+          gap: '0.3em',
         }}
       >
         {renderTituloComItalico(titulo)}

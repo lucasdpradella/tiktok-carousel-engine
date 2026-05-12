@@ -27,19 +27,16 @@ const COLORS = {
 };
 
 function comItalico(s: string): React.ReactNode {
-  // Retorna span container; trecho ~marcado~ vira inner span italic (herda cor do parent).
-  const parts = s.split('~');
-  return (
-    <span style={{ display: 'flex', flexWrap: 'wrap' }}>
-      {parts.map((p, i) =>
-        i % 2 === 1 ? (
-          <span key={i} style={{ fontStyle: 'italic' }}>{p}</span>
-        ) : (
-          <span key={i}>{p}</span>
-        ),
-      )}
-    </span>
-  );
+  // Trim bordas de partes nao-italic + gap no flex parent.
+  const raw = s.split('~');
+  return raw.map((p, i) => {
+    if (i % 2 === 1) {
+      return <span key={i} style={{ fontStyle: 'italic' }}>{p}</span>;
+    }
+    const trimmed = p.replace(/^[\s\u00A0]+|[\s\u00A0]+$/g, '');
+    if (!trimmed) return null;
+    return <span key={i}>{trimmed}</span>;
+  }).filter(Boolean);
 }
 
 /**
@@ -124,6 +121,7 @@ export const PradexLista: React.FC<Props> = ({
           marginTop: 56,
           marginBottom: 12,
           flexWrap: 'wrap',
+          gap: '0.3em',
         }}
       >
         {comItalico(titulo)}
