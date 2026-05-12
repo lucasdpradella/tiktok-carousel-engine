@@ -124,7 +124,7 @@ export const PradexConceito: React.FC<Props> = ({
           marginTop: 56,
           marginBottom: 12,
           flexWrap: 'wrap',
-          gap: '0.3em',
+          gap: 20,
         }}
       >
         {comItalico(titulo)}
@@ -170,7 +170,7 @@ export const PradexConceito: React.FC<Props> = ({
           lineHeight: 1.05,
           marginBottom: 36,
           flexWrap: 'wrap',
-          gap: '0.3em',
+          gap: 20,
         }}
       >
         {comItalico(corpoDestaque)}

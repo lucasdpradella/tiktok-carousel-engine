@@ -145,7 +145,7 @@ export const PradexCapa: React.FC<Props> = ({
           letterSpacing: -2,
           marginTop: 10,
           flexWrap: 'wrap',
-          gap: '0.3em',
+          gap: 20,
         }}
       >
         {renderTituloComItalico(titulo)}

@@ -121,7 +121,7 @@ export const PradexLista: React.FC<Props> = ({
           marginTop: 56,
           marginBottom: 12,
           flexWrap: 'wrap',
-          gap: '0.3em',
+          gap: 20,
         }}
       >
         {comItalico(titulo)}

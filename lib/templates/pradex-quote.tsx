@@ -126,7 +126,7 @@ export const PradexQuote: React.FC<Props> = ({
           letterSpacing: -1,
           marginBottom: 50,
           flexWrap: 'wrap',
-          gap: '0.3em',
+          gap: 20,
         }}
       >
         {comItalico(quote)}
