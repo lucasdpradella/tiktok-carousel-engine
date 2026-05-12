@@ -10,49 +10,41 @@ export const config = { runtime: 'edge' };
 const WIDTH = 1080;
 const HEIGHT = 1920;
 
-// ── Fontes carregadas em runtime (Google Fonts via CDN) ────────────
-// Playfair Display (serif editorial) e Inter (sans-serif).
-// Cacheadas pelo CDN — primeira render carrega, próximas reusam.
+// ── Fontes carregadas em runtime (Google Fonts CDN — Latin subset) ────
+// Inter v20 e Playfair Display v40 são variable fonts:
+//   - Inter normal: 1 URL serve 400/700/800
+//   - Playfair Display: 1 URL pra normal, outra pra italic (variable axes)
+// URLs auditadas em 2026-05-12 contra fonts.googleapis.com/css2.
+// Se quebrarem, refazer via: fetch('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&display=swap') e pegar as URLs Latin (unicode-range U+0000-00FF).
 const FONT_URLS = {
-  playfairRegular:
-    'https://fonts.gstatic.com/s/playfairdisplay/v37/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvUDQ.ttf',
-  playfairBold:
-    'https://fonts.gstatic.com/s/playfairdisplay/v37/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKd1vUDQ.ttf',
-  playfairItalic:
-    'https://fonts.gstatic.com/s/playfairdisplay/v37/nuFRD-vYSZviVYUb_rj3ij__anPXBYf9pW8gxk1JpQ.ttf',
-  playfairBoldItalic:
-    'https://fonts.gstatic.com/s/playfairdisplay/v37/nuFRD-vYSZviVYUb_rj3ij__anPXBYf9oW0gxk1JpQ.ttf',
-  interRegular:
-    'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50ojIQ_Ouxg.ttf',
-  interBold:
-    'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50ojIs_Ouxg.ttf',
-  interExtraBold:
-    'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50ojIY_Ouxg.ttf',
+  interLatin:
+    'https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2',
+  playfairLatinNormal:
+    'https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgA.woff2',
+  playfairLatinItalic:
+    'https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnogkk7.woff2',
 };
 
 async function loadFonts() {
   const fetchFont = async (url: string) => {
     const res = await fetch(url);
-    if (!res.ok) throw new Error(`font fetch failed: ${url}`);
+    if (!res.ok) throw new Error(`font fetch failed (${res.status}): ${url}`);
     return await res.arrayBuffer();
   };
-  const [pfR, pfB, pfI, pfBI, inR, inB, inEB] = await Promise.all([
-    fetchFont(FONT_URLS.playfairRegular),
-    fetchFont(FONT_URLS.playfairBold),
-    fetchFont(FONT_URLS.playfairItalic),
-    fetchFont(FONT_URLS.playfairBoldItalic),
-    fetchFont(FONT_URLS.interRegular),
-    fetchFont(FONT_URLS.interBold),
-    fetchFont(FONT_URLS.interExtraBold),
+  const [inter, pfNormal, pfItalic] = await Promise.all([
+    fetchFont(FONT_URLS.interLatin),
+    fetchFont(FONT_URLS.playfairLatinNormal),
+    fetchFont(FONT_URLS.playfairLatinItalic),
   ]);
+  // Mesmo binário serve múltiplos weights pq são variable fonts; Satori usa o weight do estilo declarado.
   return [
-    { name: 'Playfair', data: pfR, weight: 500 as const, style: 'normal' as const },
-    { name: 'Playfair', data: pfB, weight: 700 as const, style: 'normal' as const },
-    { name: 'Playfair', data: pfI, weight: 500 as const, style: 'italic' as const },
-    { name: 'Playfair', data: pfBI, weight: 700 as const, style: 'italic' as const },
-    { name: 'Inter', data: inR, weight: 400 as const, style: 'normal' as const },
-    { name: 'Inter', data: inB, weight: 700 as const, style: 'normal' as const },
-    { name: 'Inter', data: inEB, weight: 800 as const, style: 'normal' as const },
+    { name: 'Inter', data: inter, weight: 400 as const, style: 'normal' as const },
+    { name: 'Inter', data: inter, weight: 700 as const, style: 'normal' as const },
+    { name: 'Inter', data: inter, weight: 800 as const, style: 'normal' as const },
+    { name: 'Playfair', data: pfNormal, weight: 500 as const, style: 'normal' as const },
+    { name: 'Playfair', data: pfNormal, weight: 700 as const, style: 'normal' as const },
+    { name: 'Playfair', data: pfItalic, weight: 500 as const, style: 'italic' as const },
+    { name: 'Playfair', data: pfItalic, weight: 700 as const, style: 'italic' as const },
   ];
 }
 
