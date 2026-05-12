@@ -17,22 +17,16 @@ const COLORS = {
   frame: '#1A1A1A',
 };
 
-function comItalico(s: string): React.ReactNode {
-  const raw = s.split('~');
-  const out: React.ReactNode[] = [];
-  raw.forEach((p, i) => {
-    const trimmed = p.replace(/^[\s\u00A0]+|[\s\u00A0]+$/g, '');
-    if (!trimmed) return;
-    if (out.length > 0) {
-      out.push(<span key={`sep-${i}`}>&nbsp;</span>);
-    }
-    if (i % 2 === 1) {
-      out.push(<span key={i} style={{ fontStyle: 'italic', color: COLORS.accent }}>{trimmed}</span>);
-    } else {
-      out.push(<span key={i}>{trimmed}</span>);
-    }
-  });
-  return out;
+function comItalico(s: string): React.ReactNode[] {
+  return s.split('~').map((p, i) =>
+    i % 2 === 1 ? (
+      <span key={i} style={{ fontStyle: 'italic', color: COLORS.accent }}>
+        {p}
+      </span>
+    ) : (
+      <React.Fragment key={i}>{p}</React.Fragment>
+    ),
+  );
 }
 
 /**
@@ -118,10 +112,10 @@ export const PradexQuote: React.FC<Props> = ({
         “
       </div>
 
-      {/* Quote */}
+      {/* Quote -- display:block pra Satori tratar como fluxo de texto */}
       <div
         style={{
-          display: 'flex',
+          display: 'block',
           color: COLORS.ink,
           fontFamily: 'Playfair',
           fontWeight: 500,
@@ -130,8 +124,6 @@ export const PradexQuote: React.FC<Props> = ({
           lineHeight: 1.15,
           letterSpacing: -1,
           marginBottom: 50,
-          flexWrap: 'wrap',
-          gap: 20,
         }}
       >
         {comItalico(quote)}
@@ -164,4 +156,16 @@ export const PradexQuote: React.FC<Props> = ({
             color: COLORS.inkSoft,
             fontFamily: 'Inter',
             fontWeight: 400,
-            fontSi
+            fontSize: 28,
+            lineHeight: 1.35,
+            whiteSpace: 'pre-line',
+            paddingTop: 24,
+            borderTop: `1px solid ${COLORS.frame}33`,
+          }}
+        >
+          {rodapeContexto}
+        </div>
+      ) : null}
+    </div>
+  </div>
+);

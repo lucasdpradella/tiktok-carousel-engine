@@ -26,22 +26,16 @@ const COLORS = {
   frame: '#1A1A1A',
 };
 
-function comItalico(s: string): React.ReactNode {
-  const raw = s.split('~');
-  const out: React.ReactNode[] = [];
-  raw.forEach((p, i) => {
-    const trimmed = p.replace(/^[\s\u00A0]+|[\s\u00A0]+$/g, '');
-    if (!trimmed) return;
-    if (out.length > 0) {
-      out.push(<span key={`sep-${i}`}>&nbsp;</span>);
-    }
-    if (i % 2 === 1) {
-      out.push(<span key={i} style={{ fontStyle: 'italic' }}>{trimmed}</span>);
-    } else {
-      out.push(<span key={i}>{trimmed}</span>);
-    }
-  });
-  return out;
+function comItalico(s: string): React.ReactNode[] {
+  return s.split('~').map((p, i) =>
+    i % 2 === 1 ? (
+      <span key={i} style={{ fontStyle: 'italic' }}>
+        {p}
+      </span>
+    ) : (
+      <React.Fragment key={i}>{p}</React.Fragment>
+    ),
+  );
 }
 
 /**
@@ -113,10 +107,10 @@ export const PradexLista: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Título */}
+      {/* Titulo -- display:block pra Satori tratar como fluxo de texto */}
       <div
         style={{
-          display: 'flex',
+          display: 'block',
           color: COLORS.ink,
           fontFamily: 'Playfair',
           fontWeight: 700,
@@ -125,8 +119,6 @@ export const PradexLista: React.FC<Props> = ({
           letterSpacing: -2,
           marginTop: 56,
           marginBottom: 12,
-          flexWrap: 'wrap',
-          gap: 20,
         }}
       >
         {comItalico(titulo)}
@@ -263,4 +255,16 @@ export const PradexLista: React.FC<Props> = ({
               display: 'flex',
               alignItems: 'center',
               color: COLORS.accent,
-  
+              fontFamily: 'Playfair',
+              fontStyle: 'italic',
+              fontWeight: 600,
+              fontSize: 40,
+            }}
+          >
+            {proximoTitulo} ›
+          </div>
+        </div>
+      ) : null}
+    </div>
+  </div>
+);

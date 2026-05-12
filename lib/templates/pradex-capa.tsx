@@ -22,26 +22,22 @@ const COLORS = {
 };
 
 /**
- * Quebra o título em pedaços renderizando ~itálico~ como <i>.
- * Ex: "Antes de investir, ~organize-se~." vira ["Antes de investir, ", <i>organize-se</i>, "."]
+ * Quebra o titulo em pedacos renderizando ~italico~ como <span italic>.
+ * Texto regular vira React.Fragment (text node puro), nao span. Combinado com
+ * display:block no container pai, Satori trata como fluxo de texto inline e
+ * preserva espacos naturalmente.
  */
-function renderTituloComItalico(titulo: string): React.ReactNode {
-  // Separador explicito (&nbsp; em span proprio) entre as partes.
-  const raw = titulo.split('~');
-  const out: React.ReactNode[] = [];
-  raw.forEach((p, i) => {
-    const trimmed = p.replace(/^[\s\u00A0]+|[\s\u00A0]+$/g, '');
-    if (!trimmed) return;
-    if (out.length > 0) {
-      out.push(<span key={`sep-${i}`}>&nbsp;</span>);
-    }
-    if (i % 2 === 1) {
-      out.push(<span key={i} style={{ fontStyle: 'italic' }}>{trimmed}</span>);
-    } else {
-      out.push(<span key={i}>{trimmed}</span>);
-    }
-  });
-  return out;
+function renderTituloComItalico(titulo: string): React.ReactNode[] {
+  const parts = titulo.split('~');
+  return parts.map((part, idx) =>
+    idx % 2 === 1 ? (
+      <span key={idx} style={{ fontStyle: 'italic' }}>
+        {part}
+      </span>
+    ) : (
+      <React.Fragment key={idx}>{part}</React.Fragment>
+    ),
+  );
 }
 
 /**
@@ -139,10 +135,10 @@ export const PradexCapa: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Título serif gigante */}
+      {/* Titulo serif gigante -- display:block pra Satori tratar como fluxo de texto */}
       <div
         style={{
-          display: 'flex',
+          display: 'block',
           color: COLORS.ink,
           fontFamily: 'Playfair',
           fontWeight: 700,
@@ -150,8 +146,6 @@ export const PradexCapa: React.FC<Props> = ({
           lineHeight: 1.0,
           letterSpacing: -2,
           marginTop: 10,
-          flexWrap: 'wrap',
-          gap: 20,
         }}
       >
         {renderTituloComItalico(titulo)}
@@ -222,4 +216,25 @@ export const PradexCapa: React.FC<Props> = ({
           style={{
             color: COLORS.accent,
             fontFamily: 'Inter',
-            fontWeig
+            fontWeight: 700,
+            fontSize: 32,
+            letterSpacing: 1,
+          }}
+        >
+          {rodapeEsq}
+        </div>
+        <div
+          style={{
+            color: COLORS.inkSoft,
+            fontFamily: 'Inter',
+            fontWeight: 400,
+            fontSize: 26,
+            letterSpacing: 0.5,
+          }}
+        >
+          {rodapeDir}
+        </div>
+      </div>
+    </div>
+  </div>
+);

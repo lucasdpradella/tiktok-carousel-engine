@@ -27,24 +27,16 @@ const COLORS = {
   frame: '#1A1A1A',
 };
 
-function comItalico(s: string): React.ReactNode {
-  // Estrategia: separador EXPLICITO entre partes. Trim do texto + span " " entre os itens.
-  // (Satori junta flex items sem espaco mesmo com gap.)
-  const raw = s.split('~');
-  const out: React.ReactNode[] = [];
-  raw.forEach((p, i) => {
-    const trimmed = p.replace(/^[\s\u00A0]+|[\s\u00A0]+$/g, '');
-    if (!trimmed) return;
-    if (out.length > 0) {
-      out.push(<span key={`sep-${i}`}>&nbsp;</span>);
-    }
-    if (i % 2 === 1) {
-      out.push(<span key={i} style={{ fontStyle: 'italic', color: COLORS.accent }}>{trimmed}</span>);
-    } else {
-      out.push(<span key={i}>{trimmed}</span>);
-    }
-  });
-  return out;
+function comItalico(s: string): React.ReactNode[] {
+  return s.split('~').map((p, i) =>
+    i % 2 === 1 ? (
+      <span key={i} style={{ fontStyle: 'italic', color: COLORS.accent }}>
+        {p}
+      </span>
+    ) : (
+      <React.Fragment key={i}>{p}</React.Fragment>
+    ),
+  );
 }
 
 /**
@@ -118,10 +110,10 @@ export const PradexConceito: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Título principal */}
+      {/* Titulo principal -- display:block pra Satori tratar como fluxo de texto */}
       <div
         style={{
-          display: 'flex',
+          display: 'block',
           color: COLORS.ink,
           fontFamily: 'Playfair',
           fontWeight: 700,
@@ -130,8 +122,6 @@ export const PradexConceito: React.FC<Props> = ({
           letterSpacing: -2,
           marginTop: 56,
           marginBottom: 12,
-          flexWrap: 'wrap',
-          gap: 20,
         }}
       >
         {comItalico(titulo)}
@@ -166,18 +156,16 @@ export const PradexConceito: React.FC<Props> = ({
         </div>
       ) : null}
 
-      {/* Destaque (ideia certa) */}
+      {/* Destaque (ideia certa) -- display:block, mesmo padrao do titulo */}
       <div
         style={{
-          display: 'flex',
+          display: 'block',
           color: COLORS.ink,
           fontFamily: 'Playfair',
           fontWeight: 700,
           fontSize: 72,
           lineHeight: 1.05,
           marginBottom: 36,
-          flexWrap: 'wrap',
-          gap: 20,
         }}
       >
         {comItalico(corpoDestaque)}
@@ -242,4 +230,26 @@ export const PradexConceito: React.FC<Props> = ({
               fontFamily: 'Inter',
               fontWeight: 500,
               fontSize: 28,
-             
+              marginBottom: 6,
+            }}
+          >
+            {proximoLabel}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              color: COLORS.accent,
+              fontFamily: 'Playfair',
+              fontStyle: 'italic',
+              fontWeight: 600,
+              fontSize: 40,
+            }}
+          >
+            {proximoTitulo} ›
+          </div>
+        </div>
+      ) : null}
+    </div>
+  </div>
+);
