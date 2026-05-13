@@ -1,0 +1,256 @@
+{
+  "name": "TikTok Carousel — Path B (upload-post.com)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 9 * * *" }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Cron · 09:00 BRT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 320]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from claim_next_topic('financas-comportamentais') as t",
+        "options": {}
+      },
+      "id": "claim-topic",
+      "name": "Claim next topic",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [480, 320],
+      "credentials": {
+        "postgres": { "id": "REPLACE_SUPABASE_PG_CRED", "name": "Supabase PG" }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select payload->>'angulo' as a from runs where workflow = 'B-upload-post' and started_at > now() - interval '14 days' order by started_at desc limit 3",
+        "options": {}
+      },
+      "id": "fetch-last-angulos",
+      "name": "Últimos 3 ângulos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [720, 320],
+      "credentials": {
+        "postgres": { "id": "REPLACE_SUPABASE_PG_CRED", "name": "Supabase PG" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sorteia um ângulo do menu A..J excluindo os 3 últimos usados.\n// Se o topic já tem ângulo definido, usa ele (prioridade do editor humano).\n\nconst todos = ['A','B','C','D','E','F','G','H','I','J'];\nconst topic = $('Claim next topic').first().json;\nconst recentes = $input.all().map(i => i.json.a).filter(Boolean);\n\nlet escolhido = topic.angulo;\nif (!escolhido) {\n  const disponiveis = todos.filter(x => !recentes.includes(x));\n  escolhido = disponiveis[Math.floor(Math.random() * disponiveis.length)];\n}\n\nconst descricoes = {\n  A: 'Reframe (você pensa X, na verdade é Y) — use pradex-conceito com tituloRiscado',\n  B: 'Lista de 3 itens — use pradex-lista no slide central',\n  C: 'Viés comportamental nomeado — use pradex-quote + conceito',\n  D: 'História/caso anônimo — narrativa em 5-6 slides',\n  E: 'Pergunta provocativa (\"você sabe quanto...\") na capa',\n  F: 'Mito vs verdade — 3-4 pares em pradex-conceito com riscado/certo',\n  G: 'Comparativo numérico entre 2 cenários ao longo do tempo',\n  H: 'Checklist comportamental em 5-7 perguntas',\n  I: 'Quote de impacto (Kahneman/Munger/Buffett) — abrir com pradex-quote',\n  J: 'Reflexão ensaística — estrutura mais livre'\n};\n\nreturn [{\n  json: {\n    ...topic,\n    angulo: escolhido,\n    angulo_descricao: descricoes[escolhido]\n  }\n}];"
+      },
+      "id": "pick-angulo",
+      "name": "Sortear ângulo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 320]
+    },
+    {
+      "parameters": {
+        "modelId": { "__rl": true, "value": "gpt-4o-mini", "mode": "list" },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=Você é o copywriter editorial do Pradex (Manual do Dinheiro), conteúdo do Lucas Pradella — planejador financeiro CFP®. Sua tarefa: gerar carrosséis pro TikTok sobre FINANÇAS COMPORTAMENTAIS.\n\nREGRAS DE VOZ:\n- Português do Brasil. Adulto. Direto. Sem chavão de influencer.\n- Nunca: 'galera', 'pessoal', 'vem comigo', 'bora', emoji nos slides.\n- Sempre: foco em processo, hábito, decisão. Não recomendar ativo. Não prometer retorno.\n- Frases curtas. Ritmo de manchete. Cada slide tem 1 ideia.\n\nREGRAS DE ESTRUTURA:\n- Saída: APENAS JSON válido (sem markdown, sem comentário fora).\n- 6 a 8 slides.\n- Slide 1: SEMPRE template pradex-capa.\n- Slide final: CTA pro próximo capítulo ou perfil.\n- Marcar 1-2 palavras-chave por título com ~palavra~.\n- bg_prompt sempre null.\n- Caption: 150-250 chars, hook + 3-5 hashtags.\n\nTEMPLATES:\n- pradex-capa: numero, titulo, moduloLabel, moduloTitulo, moduloDescricao\n- pradex-conceito: tituloRiscado (opcional), titulo, corpoDestaque, explicacao, bullets[], proximoTitulo\n- pradex-lista: titulo, itens[{badge, titulo, descricao}], rodapeNota, pillLabel, proximoTitulo\n- pradex-quote: quote, autoria, rodapeContexto\n\nÂNGULO: {{ $json.angulo }} — {{ $json.angulo_descricao }}\nTEMA: {{ $json.tema }}\nSÉRIE: {{ $json.serie }}\nORDEM: {{ $json.ordem_serie }}"
+            },
+            {
+              "role": "user",
+              "content": "=Tema: {{ $json.tema }}\nÂngulo: {{ $json.angulo_descricao }}\nNotas: {{ $json.notas || '—' }}\n\nGere o JSON do carrossel."
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": { "temperature": 0.7 }
+      },
+      "id": "llm-roteiro",
+      "name": "LLM · gera roteiro",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.6,
+      "position": [1200, 320],
+      "credentials": {
+        "openAiApi": { "id": "REPLACE_OPENAI_CRED", "name": "OpenAI" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse + valida + persiste carousel + slides no Supabase via REST (do node Supabase no próximo step).\nconst raw = $input.first().json.message?.content || $input.first().json;\nconst data = typeof raw === 'string' ? JSON.parse(raw) : raw;\nconst topic = $('Sortear ângulo').first().json;\n\nif (!Array.isArray(data.slides) || data.slides.length < 6 || data.slides.length > 8) {\n  throw new Error('Slides count fora do range 6-8: ' + (data.slides?.length || 0));\n}\nif (data.slides[0].template !== 'pradex-capa') {\n  throw new Error('Slide 1 deve ser pradex-capa');\n}\n\nreturn [{\n  json: {\n    topic_id: topic.id,\n    nicho: topic.nicho,\n    angulo: topic.angulo,\n    serie: data.serie || topic.serie,\n    ordem: data.ordem || topic.ordem_serie,\n    titulo: data.titulo_post || topic.tema,\n    caption: data.caption,\n    hashtags: data.hashtags || [],\n    slides: data.slides\n  }\n}];"
+      },
+      "id": "validate",
+      "name": "Validar + normalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 320]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into carousels (topic_id, nicho, titulo, caption, hashtags, status, llm_model) values ($1, $2, $3, $4, $5::text[], 'rendering', 'gpt-4o-mini') returning id",
+        "options": {
+          "queryReplacement": "={{ $json.topic_id }}, {{ $json.nicho }}, {{ $json.titulo }}, {{ $json.caption }}, {{ JSON.stringify($json.hashtags) }}"
+        }
+      },
+      "id": "insert-carousel",
+      "name": "Insert carousel",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1680, 320],
+      "credentials": {
+        "postgres": { "id": "REPLACE_SUPABASE_PG_CRED", "name": "Supabase PG" }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "slides",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "id": "split-slides",
+      "name": "Itera slides",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [1920, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_RENDER_URL }}/api/slide",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.VERCEL_RENDER_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"template\": \"{{ $json.template }}\",\n  \"serie\": \"{{ $('Validar + normalizar').first().json.serie }}\",\n  \"ordem\": \"{{ $('Validar + normalizar').first().json.ordem }}\",\n  ...{{ JSON.stringify($json.params) }}\n}",
+        "options": { "response": { "response": { "responseFormat": "file" } } }
+      },
+      "id": "render-slide",
+      "name": "Vercel · render slide",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2160, 320]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "carousels",
+        "fileName": "={{ $('Insert carousel').first().json.id }}/{{ $json.ordem }}.png",
+        "binaryData": true,
+        "binaryPropertyName": "data",
+        "options": { "contentType": "image/png", "upsert": true }
+      },
+      "id": "upload-storage",
+      "name": "Supabase Storage",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2400, 320],
+      "credentials": {
+        "supabaseApi": { "id": "REPLACE_SUPABASE_CRED", "name": "Supabase" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Monta a URL pública e devolve agregado quando termina o lote.\nconst items = $input.all();\nconst carouselId = $('Insert carousel').first().json.id;\nconst urls = items.map(i => {\n  const path = `${carouselId}/${i.json.ordem}.png`;\n  return `${$env.SUPABASE_URL}/storage/v1/object/public/carousels/${path}`;\n});\nreturn [{ json: { carousel_id: carouselId, urls } }];"
+      },
+      "id": "collect-urls",
+      "name": "Agrega URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2640, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.upload-post.com/v1/posts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.UPLOAD_POST_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"profile\": \"{{ $env.UPLOAD_POST_PROFILE }}\",\n  \"platforms\": [\"tiktok\"],\n  \"type\": \"photo\",\n  \"images\": {{ JSON.stringify($json.urls) }},\n  \"caption\": \"{{ $('Validar + normalizar').first().json.caption }}\"\n}",
+        "options": {}
+      },
+      "id": "upload-post-publish",
+      "name": "upload-post · publica",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2880, 320]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update carousels set status = 'posted', posted_at = now(), tiktok_post_id = $1 where id = $2",
+        "options": {
+          "queryReplacement": "={{ $json.id || $json.post_id || 'unknown' }}, {{ $('Agrega URLs').first().json.carousel_id }}"
+        }
+      },
+      "id": "mark-posted",
+      "name": "Marca posted",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [3120, 320],
+      "credentials": {
+        "postgres": { "id": "REPLACE_SUPABASE_PG_CRED", "name": "Supabase PG" }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into runs (workflow, carousel_id, status, payload) values ('B-upload-post', $1, 'success', $2::jsonb)",
+        "options": {
+          "queryReplacement": "={{ $('Agrega URLs').first().json.carousel_id }}, {{ JSON.stringify({ angulo: $('Sortear ângulo').first().json.angulo, tema: $('Sortear ângulo').first().json.tema }) }}"
+        }
+      },
+      "id": "log-run",
+      "name": "Log run",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [3360, 320],
+      "credentials": {
+        "postgres": { "id": "REPLACE_SUPABASE_PG_CRED", "name": "Supabase PG" }
+      }
+    }
+  ],
+  "connections": {
+    "Cron · 09:00 BRT": { "main": [[{ "node": "Claim next topic", "type": "main", "index": 0 }]] },
+    "Claim next topic": { "main": [[{ "node": "Últimos 3 ângulos", "type": "main", "index": 0 }]] },
+    "Últimos 3 ângulos": { "main": [[{ "node": "Sortear ângulo", "type": "main", "index": 0 }]] },
+    "Sortear ângulo": { "main": [[{ "node": "LLM · gera roteiro", "type": "main", "index": 0 }]] },
+    "LLM · gera roteiro": { "main": [[{ "node": "Validar + normalizar", "type": "main", "index": 0 }]] },
+    "Validar + normalizar": { "main": [[{ "node": "Insert carousel", "type": "main", "index": 0 }]] },
+    "Insert carousel": { "main": [[{ "node": "Itera slides", "type": "main", "index": 0 }]] },
+    "Itera slides": { "main": [[{ "node": "Vercel · render slide", "type": "main", "index": 0 }]] },
+    "Vercel · render slide": { "main": [[{ "node": "Supabase Storage", "type": "main", "index": 0 }]] },
+    "Supabase Storage": { "main": [[{ "node": "Agrega URLs", "type": "main", "index": 0 }]] },
+    "Agrega URLs": { "main": [[{ "node": "upload-post · publica", "type": "main", "index": 0 }]] },
+    "upload-post · publica": { "main": [[{ "node": "Marca posted", "type": "main", "index": 0 }]] },
+    "Marca posted": { "main": [[{ "node": "Log run", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "0.1.0",
+  "meta": { "templateCredsSetupCompleted": false }
+}

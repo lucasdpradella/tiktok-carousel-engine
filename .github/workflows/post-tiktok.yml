@@ -1,0 +1,73 @@
+name: post-tiktok
+
+# Cron: 7h BRT (= 10:00 UTC) a cada 2 dias → "dia sim, dia não"
+# GitHub Actions cron tem ~5-15min de jitter; aceitável pro caso.
+# workflow_dispatch permite rodar manualmente pra smoke tests.
+
+on:
+  schedule:
+    - cron: '0 10 */2 * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (gera mas não posta)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+      scheduled_date:
+        description: 'ISO-8601 opcional pra agendar (ex 2026-05-15T07:00:00). Vazio = posta imediato.'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: engine/openai
+
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      UPLOAD_POST_API_KEY: ${{ secrets.UPLOAD_POST_API_KEY }}
+      UPLOAD_POST_USER: ${{ secrets.UPLOAD_POST_USER || 'lucaspradella' }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      PIPELINE_NICHO: financas-comportamentais
+      DRY_RUN: ${{ inputs.dry_run || 'false' }}
+      SCHEDULED_DATE: ${{ inputs.scheduled_date || '' }}
+      TIMEZONE: America/Sao_Paulo
+      OPENAI_PYTHON_BIN: python3
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps (Pillow + numpy)
+        run: pip install --upgrade pip && pip install pillow numpy
+
+      - name: Run end-to-end pipeline
+        run: node src/run-completo.mjs
+
+      - name: Upload outputs as artifact (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: carrossel-${{ github.run_id }}
+          path: engine/openai/outputs/
+          if-no-files-found: ignore
+          retention-days: 14

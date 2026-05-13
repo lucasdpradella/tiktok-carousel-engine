@@ -1,0 +1,73 @@
+{
+  "name": "TikTok Carousel — Path A (TikTok API direto, pós-audit)",
+  "_comentario": "MESMO fluxo do workflow B até 'Agrega URLs'. A diferença é o último bloco: em vez de chamar upload-post.com, chama TikTok Content Posting API (init + publish). Importar este workflow SOMENTE depois que o audit do TikTok aprovar o app. Os 12 primeiros nós são idênticos ao workflow B — copie deles na hora de importar e substitua só o bloco de publicação por estes 3 nós:",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/content/init/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.TIKTOK_ACCESS_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"post_info\": {\n    \"title\": \"{{ $('Validar + normalizar').first().json.titulo }}\",\n    \"description\": \"{{ $('Validar + normalizar').first().json.caption }}\",\n    \"privacy_level\": \"SELF_ONLY\",\n    \"disable_comment\": false,\n    \"auto_add_music\": true\n  },\n  \"source_info\": {\n    \"source\": \"PULL_FROM_URL\",\n    \"photo_cover_index\": 0,\n    \"photo_images\": {{ JSON.stringify($json.urls) }}\n  },\n  \"post_mode\": \"DIRECT_POST\",\n  \"media_type\": \"PHOTO\"\n}",
+        "options": {}
+      },
+      "id": "tiktok-init",
+      "name": "TikTok · init+publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2880, 320],
+      "notes": "Inicia E publica o photo carousel direto (DIRECT_POST). privacy_level deve ser SELF_ONLY até o app passar pelo audit; depois pode usar 'PUBLIC_TO_EVERYONE'. Retorna publish_id."
+    },
+    {
+      "parameters": {
+        "amount": 8,
+        "unit": "seconds"
+      },
+      "id": "wait-publish",
+      "name": "Aguarda 8s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [3120, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/status/fetch/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.TIKTOK_ACCESS_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"publish_id\": \"{{ $('TikTok · init+publish').first().json.data.publish_id }}\" }",
+        "options": {}
+      },
+      "id": "tiktok-status",
+      "name": "TikTok · status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3360, 320]
+    }
+  ],
+  "connections": {
+    "TikTok · init+publish": { "main": [[{ "node": "Aguarda 8s", "type": "main", "index": 0 }]] },
+    "Aguarda 8s": { "main": [[{ "node": "TikTok · status", "type": "main", "index": 0 }]] }
+  },
+  "_referencia_oauth": "Pra renovar o access token automaticamente, criar workflow auxiliar: POST https://open.tiktokapis.com/v2/oauth/token/ com grant_type=refresh_token, client_key, client_secret, refresh_token. Rodar daily às 07:00 e salvar novo access_token nas variáveis do n8n.",
+  "_referencia_scopes": "OAuth scopes necessários: video.upload, video.publish (sim, ambos servem pra photo post também).",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "versionId": "0.1.0"
+}

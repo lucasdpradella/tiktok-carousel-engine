@@ -1,0 +1,16 @@
+{
+  "name": "tiktok-gemini-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Engine Pradex (substitui Satori) — Google Gemini Nano Banana pra gerar carrosseis editoriais.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "smoke": "node ../../scripts/smoke-gemini.mjs",
+    "roteiro": "node src/gerar-roteiro.mjs",
+    "imagem": "node src/gerar-imagem.mjs",
+    "carrossel": "node src/gerar-carrossel.mjs"
+  }
+}

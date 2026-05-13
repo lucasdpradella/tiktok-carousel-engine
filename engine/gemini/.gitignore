@@ -1,0 +1,7 @@
+node_modules/
+.env
+.env.local
+*.png
+smoke-*-output.png
+smoke-*-output.*
+.DS_Store
