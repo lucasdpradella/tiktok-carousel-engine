@@ -24,6 +24,11 @@ const NICHO = process.env.PIPELINE_NICHO || 'financas-comportamentais';
 const SCHEDULED_DATE = process.env.SCHEDULED_DATE; // opcional ISO-8601
 const TIMEZONE = process.env.TIMEZONE || 'America/Sao_Paulo';
 const DRY_RUN = process.env.DRY_RUN === 'true';
+// CHAPTER_OFFSET = nº do PRÓXIMO capítulo a publicar quando ainda não há posts published.
+// Default 4 porque o Lucas já tem CAP. 03 publicado fora desta engine (Manual do Dinheiro).
+// Cada post published incrementa em 1. Pra resetar/forçar, edita o env no GitHub Secrets.
+const CHAPTER_OFFSET = parseInt(process.env.CHAPTER_OFFSET || '4', 10);
+const CHAPTER_TOTAL = parseInt(process.env.CHAPTER_TOTAL || '8', 10);
 
 async function supabase(path, init = {}) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -52,6 +57,30 @@ async function supabase(path, init = {}) {
     );
   }
   return json;
+}
+
+async function countPublishedPosts() {
+  // Conta posts em status='published' pra calcular o próximo capítulo.
+  // Usa header Prefer: count=exact pra pegar o count no Content-Range.
+  if (!SUPABASE_URL || !SUPABASE_KEY) return 0;
+  const url = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/posts?select=id&status=eq.published`;
+  const res = await fetch(url, {
+    method: 'HEAD',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      Prefer: 'count=exact',
+      Range: '0-0',
+    },
+  });
+  if (!res.ok) {
+    console.warn(`[chapter] falha ao contar posts published: HTTP ${res.status}. Usando 0.`);
+    return 0;
+  }
+  // Content-Range: "0-0/N" (N = total). Pode vir como "*/0" se vazio.
+  const cr = res.headers.get('content-range') || '';
+  const m = cr.match(/\/(\d+)\s*$/);
+  return m ? parseInt(m[1], 10) : 0;
 }
 
 async function claimNextTopic(nicho) {
@@ -85,7 +114,7 @@ async function saveCarousel({ topicId, nicho, titulo, caption, hashtags, status 
       hashtags,
       status,
       llm_model: 'gpt-4o-mini',
-      image_model: 'gpt-image-1+pradex-template',
+      image_model: 'pradex-template-only',
     }),
   });
   return Array.isArray(r) ? r[0] : r;
@@ -125,10 +154,22 @@ async function main() {
   }
   console.log(`[run] tópico claimado: #${topic.id} — "${topic.tema}" (ângulo=${topic.angulo})`);
 
+  // 1.5. Calcula o número do capítulo: OFFSET + posts já published
+  const publishedCount = await countPublishedPosts();
+  const chapterNumber = CHAPTER_OFFSET + publishedCount;
+  console.log(
+    `[run] chapter = OFFSET(${CHAPTER_OFFSET}) + published(${publishedCount}) = ${chapterNumber} / ${CHAPTER_TOTAL}`
+  );
+
   let carousel;
   try {
     // 2. Gera roteiro + 3. gera 2 slides em paralelo
-    const r = await gerarCarrossel({ topico: topic.tema, angulo: topic.angulo });
+    const r = await gerarCarrossel({
+      topico: topic.tema,
+      angulo: topic.angulo,
+      chapterNumber,
+      chapterTotal: CHAPTER_TOTAL,
+    });
     console.log(`[run] carrossel pronto em ${r.outputDir}`);
 
     // 4a. Cria registro do carousel em rendering → ready

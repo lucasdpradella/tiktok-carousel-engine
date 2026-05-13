@@ -1,8 +1,10 @@
 // gerar-roteiro.mjs
 // Recebe um tópico (string em pt-BR) → chama gpt-4o-mini com response_format JSON →
-// devolve { caption, hashtags, slides: [tensao, resolucao] } com shapes DIFERENTES:
-//   - slide 1 (tensao):    { ordem, tipo, headline, subtexto, texto_meta, sujeito_visual }   (vai pro gpt-image-1)
-//   - slide 2 (resolucao): { ordem, tipo, titulo, bullets, tagline, texto_meta }              (vai pro template Pradex)
+// devolve { caption, hashtags, slides: [tensao, resolucao] }.
+// Ambos os slides agora rodam em template Python (sem gpt-image-1). Shapes:
+//   - slide 1 (tensao):    { ordem, tipo, titulo, cap_nome, cap_desc, texto_meta }
+//   - slide 2 (resolucao): { ordem, tipo, titulo, bullets, tagline, texto_meta }
+// O texto_meta vem com placeholder "{{CAP}}" — o orquestrador substitui pelo nº do capítulo.
 
 import { readFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
@@ -88,12 +90,39 @@ export async function gerarRoteiro({ topico, angulo } = {}) {
     }
 
     if (s.tipo === 'tensao') {
-      // Schema clássico do gpt-image-1
-      for (const k of ['headline', 'subtexto', 'sujeito_visual']) {
-        if (!s[k] || typeof s[k] !== 'string') {
+      // Schema NOVO (2026-05-13 refactor 2): template Python capa de capítulo
+      if (!Array.isArray(s.titulo) || s.titulo.length < 2 || s.titulo.length > 4) {
+        throw new Error(
+          `Roteiro inválido: slide TENSÃO 'titulo' precisa ser array de 2-4 [texto, estilo]. ` +
+            JSON.stringify(s.titulo)
+        );
+      }
+      for (const [j, t] of s.titulo.entries()) {
+        if (!Array.isArray(t) || t.length !== 2 || typeof t[0] !== 'string') {
           throw new Error(
-            `Roteiro inválido: slide TENSÃO sem '${k}'. ` + JSON.stringify(s)
+            `Roteiro inválido: slide TENSÃO titulo[${j}] mal formado, esperava [texto, estilo]. ` +
+              JSON.stringify(t)
           );
+        }
+        // slide 1 só aceita 'r' ou 'i' (sem i_underline)
+        if (!['r', 'i'].includes(t[1])) {
+          t[1] = 'r';
+        }
+      }
+      if (!s.cap_nome || typeof s.cap_nome !== 'string') {
+        throw new Error(
+          `Roteiro inválido: slide TENSÃO 'cap_nome' (string) obrigatório. ` + JSON.stringify(s)
+        );
+      }
+      if (!Array.isArray(s.cap_desc) || s.cap_desc.length < 1 || s.cap_desc.length > 3) {
+        throw new Error(
+          `Roteiro inválido: slide TENSÃO 'cap_desc' precisa ser array de 1-3 strings. ` +
+            JSON.stringify(s.cap_desc)
+        );
+      }
+      for (const [j, line] of s.cap_desc.entries()) {
+        if (typeof line !== 'string') {
+          throw new Error(`Roteiro inválido: cap_desc[${j}] não é string.`);
         }
       }
     } else {

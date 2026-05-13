@@ -42,6 +42,10 @@ jobs:
       SCHEDULED_DATE: ${{ inputs.scheduled_date || '' }}
       TIMEZONE: America/Sao_Paulo
       OPENAI_PYTHON_BIN: python3
+      # Numeração de capítulo (Manual do Dinheiro). Default 4 — Lucas já publicou CAP. 03 fora.
+      # Cada post published incrementa: chapter = OFFSET + count(posts.status='published')
+      CHAPTER_OFFSET: ${{ vars.CHAPTER_OFFSET || '4' }}
+      CHAPTER_TOTAL: ${{ vars.CHAPTER_TOTAL || '8' }}
 
     steps:
       - name: Checkout repo

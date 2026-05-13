@@ -4,9 +4,11 @@
 >
 > Formato: **carrossel de 2 slides** (TENSÃO → RESOLUÇÃO). Caption carrega o desenvolvimento longo.
 >
-> **Importante (2026-05-13, refactor):** os 2 slides têm shapes diferentes.
-> - Slide 1 (TENSÃO) → vira foto editorial com texto overlay via `gpt-image-1`. Schema: `headline + subtexto + texto_meta + sujeito_visual`.
-> - Slide 2 (RESOLUÇÃO) → vira template fixo Pradex (cream + sticker do Lucas) renderizado em Python PIL. Schema: `titulo + bullets + tagline + texto_meta` (sem foto de IA).
+> **Importante (2026-05-13, refactor 2):** os 2 slides agora rodam em template Python (sem `gpt-image-1`).
+> - Slide 1 (TENSÃO) → template "capa de capítulo" (`slide_tensao.py`). Schema: `titulo (array de linhas) + cap_nome + cap_desc + texto_meta`.
+> - Slide 2 (RESOLUÇÃO) → template fixo Pradex (`slide_resolucao.py`). Schema: `titulo + bullets + tagline + texto_meta`.
+>
+> O número do capítulo (`cap_num`, `numero_grande`) e o `texto_meta` são **injetados pelo orquestrador** depois do parse — você NÃO precisa preencher esses campos, deixe como placeholder `"{{CAP}}"`.
 >
 > A chamada usa `response_format: { type: 'json_object' }` pra garantir parse sem retry.
 
@@ -28,10 +30,19 @@ APENAS JSON válido, sem markdown, sem comentário fora do JSON, com este shape 
     {
       "ordem": 1,
       "tipo": "tensao",
-      "headline": string,       // 3-6 palavras curtas. Hook chocante.
-      "subtexto": string,       // 10-20 palavras. Cria curiosidade, NÃO entrega a resposta. Termina sem ponto-final.
-      "texto_meta": "MANUAL DO DINHEIRO · 01 / 02",
-      "sujeito_visual": string  // descrição visual breve em pt-BR de UM objeto do pool de metáforas Pradex.
+      "titulo": [                // 3-4 linhas, cada uma [texto_da_linha, estilo]. Estilo ∈ {"r","i"}.
+        ["string", "r" | "i"],
+        ["string", "r" | "i"],
+        ["string", "r" | "i"],
+        ["string", "r" | "i"]   // 4ª linha opcional
+      ],
+      "cap_nome": string,        // 3-6 palavras. Título do CAPÍTULO (ex: "A Reserva de Emergência").
+      "cap_desc": [              // 2-3 linhas curtas. Descrição operacional do capítulo.
+        "linha 1",
+        "linha 2",
+        "linha 3 (opcional)"
+      ],
+      "texto_meta": "MANUAL DO DINHEIRO  ·  CAP. {{CAP}}"    // SEMPRE com {{CAP}}; o orquestrador substitui.
     },
     {
       "ordem": 2,
@@ -50,14 +61,38 @@ APENAS JSON válido, sem markdown, sem comentário fora do JSON, com este shape 
         "linha 2",
         "linha 3 (opcional)"
       ],
-      "texto_meta": "MANUAL DO DINHEIRO  ·  02 / 02"
+      "texto_meta": "MANUAL DO DINHEIRO  ·  CAP. {{CAP}}"    // SEMPRE com {{CAP}}; o orquestrador substitui.
     }
   ]
 }
 
 Exatamente 2 slides (não 1, não 3). Sempre o slide 1 é `tipo: "tensao"` e o slide 2 é `tipo: "resolucao"`.
 
-# REGRAS DO SLIDE 2 (NOVO — template Pradex)
+# REGRAS DO SLIDE 1 (TENSÃO — capa de capítulo)
+
+## titulo (array de 3-4 linhas)
+- Frase central do slide 1, em big serif Lora dividida em 3-4 linhas curtas.
+- Cada linha: 1-3 palavras, máximo 14 caracteres com letras grandes (cabe no canvas).
+- Mistura "r" (regular) e "i" (italic). Padrão recomendado: 3 linhas em "r" + última linha curta em "i" (ex: "pensa.", "errado.", "agora.").
+- NÃO use "i_underline" no slide 1 (esse estilo é exclusivo do slide 2).
+- Exemplo bom: [["Sua reserva", "r"], ["está menor", "r"], ["do que você", "r"], ["pensa.", "i"]]
+- Exemplo bom: [["Antes de", "r"], ["investir,", "r"], ["organize-se.", "i"]]
+- A frase montada do `titulo` é o HOOK do post — chocante, provocativo, calmamente alarmante.
+
+## cap_nome
+- 3-6 palavras. Título conceitual do capítulo, como se fosse cabeçalho de livro.
+- Capitalização Tipo Título (cada palavra principal maiúscula).
+- Exemplos: "A Reserva de Emergência", "Os 3 Erros Iniciais", "Organização Financeira", "O Mapa do Gasto", "A Conta Certa", "Antes de Investir".
+
+## cap_desc (array de 2-3 linhas)
+- Descrição operacional do capítulo. Promete o que o leitor vai aprender / encontrar.
+- 2-3 linhas curtas, cada uma 5-10 palavras.
+- Tom de subtítulo de capítulo (não vendedor).
+- Exemplos:
+  - ["Quase todo mundo calcula errado.", "O número certo te protege —", "o errado te dá falsa segurança."]
+  - ["O ponto de partida que", "95% das pessoas pulam —", "e por isso nunca saem do lugar."]
+
+# REGRAS DO SLIDE 2 (RESOLUÇÃO — template Pradex)
 
 ## titulo (array de 2 linhas)
 - Forma a frase central do slide 2. Big serif Lora em 2 linhas.
@@ -93,18 +128,18 @@ Exatamente 2 slides (não 1, não 3). Sempre o slide 1 é `tipo: "tensao"` e o s
 - Zero emoji nos slides. Zero hashtag dentro do texto do slide. Hashtags só no campo `hashtags`.
 - Tema central: finanças comportamentais. NÃO produto financeiro específico, NÃO timing, NÃO recomendação de ativo.
 
-# PADRÕES DE HOOK (slide 1 — TENSÃO)
+# PADRÕES DE HOOK (slide 1 — titulo)
 
-Usar 1 destes padrões na headline do slide 1:
+A frase central do slide 1 (campo `titulo`, montada concatenando as linhas) usa 1 destes padrões:
 
-1. **Pergunta direta:** "Você está poupando errado?" / "Sua reserva cobre quanto?"
-2. **Dado contra-intuitivo:** "78% calcula reserva pela renda" / "Maioria poupa para o medo errado"
-3. **Contradição/reframe negativo:** "Reserva NÃO é 6× salário" / "Diversificar não é proteção"
-4. **Alarme calmo:** "Pare de calcular assim" / "Esse cálculo está furado"
-5. **Mito declarado:** "O mito da reserva fácil" / "A ilusão dos 6 meses"
-6. **Comparação curta:** "Renda × Custo: qual importa?" / "Hábito > Patrimônio"
-7. **Provocação numérica:** "6 meses de quê, exatamente?" / "Quantos meses você dura?"
-8. **Diagnóstico:** "Você confunde renda com colchão" / "Seu colchão é uma ilusão"
+1. **Diagnóstico calmo:** "Sua reserva está menor / do que você / pensa."
+2. **Reframe negativo:** "Esse cálculo / está / furado."
+3. **Mito declarado:** "O mito / dos / 6 meses."
+4. **Contradição:** "Diversificar / não é / proteção."
+5. **Ordem invertida:** "Antes de / investir, / organize-se."
+6. **Hierarquia:** "Hábito / antes de / patrimônio."
+7. **Pergunta-afirmação:** "Você sabe / quanto / dura."
+8. **Imperativo brando:** "Pare de / calcular / assim."
 
 # PADRÕES DE TÍTULO (slide 2 — RESOLUÇÃO)
 
@@ -115,10 +150,6 @@ A frase central do slide 2 (campo `titulo`) usa 1 destes padrões:
 3. **Hierarquia/ordem:** "Primeiro o custo." / "Antes do retorno."
 4. **Reframe positivo curto:** "É pelo gasto." / "É pelo hábito."
 5. **Imperativo brando:** "Recontar antes." / "Calcule, ajuste."
-
-# POOL DE SUJEITOS VISUAIS (apenas slide 1)
-
-moedas em pilha, papel amassado, mão estendida sem rosto, peças de dominó, vela acesa, balança antiga de dois pratos, semente germinando, mapa rasgado, jarra de vidro com grãos, calendário Risque, chave de bronze, ampulheta, escada de madeira, livro aberto, pedra equilibrando outras (cairn), pilha de moedas tombando, gaveta entreaberta, copo meio cheio, fósforo aceso.
 
 # RESTRIÇÕES ABSOLUTAS (não fazer)
 
@@ -132,7 +163,10 @@ moedas em pilha, papel amassado, mão estendida sem rosto, peças de dominó, ve
 - NUNCA inventar estatística específica sem hedge.
 - NUNCA mais de 4 bullets no slide 2. Sempre 3 por default.
 - NUNCA tagline com mais de 3 linhas.
-- NUNCA italic acumulado: máximo 1 linha do título em "i_underline".
+- NUNCA italic acumulado: máximo 1 linha do título em "i_underline" no slide 2.
+- NUNCA "i_underline" no slide 1 (exclusivo do slide 2).
+- NUNCA mais de 4 linhas no `titulo` do slide 1.
+- NUNCA texto_meta diferente de "MANUAL DO DINHEIRO  ·  CAP. {{CAP}}" — o orquestrador substitui {{CAP}}.
 - NUNCA markdown na saída — apenas JSON puro.
 ```
 
@@ -140,34 +174,34 @@ moedas em pilha, papel amassado, mão estendida sem rosto, peças de dominó, ve
 
 ## Exemplo de saída esperada
 
-Input: `Tópico: Por onde começar a se organizar financeiramente`
+Input: `Tópico: Reserva de emergência se mede pelo custo de viver, não pela renda`
 
 Output (ilustrativo):
 
 ```json
 {
-  "caption": "Quem nunca organizou as finanças costuma pular direto pra etapa de investir — e trava no primeiro mês quando a reserva não existe. A ordem importa: primeiro mapear pra onde o dinheiro vai, depois construir o colchão, e só então direcionar. Investir sem reserva é construir em areia.",
-  "hashtags": ["financascomportamentais", "organizacaofinanceira", "pradex", "manualdodinheiro", "educacaofinanceira"],
+  "caption": "Quase todo mundo calcula a reserva pela renda — e por isso fica subdimensionada. O número certo é o seu CUSTO mensal × 6, não o seu salário × 6. Reserva existe pra sobreviver, não pra manter o estilo de vida. Recalcule pelo gasto fixo.",
+  "hashtags": ["financascomportamentais", "reservadeemergencia", "pradex", "manualdodinheiro", "educacaofinanceira"],
   "slides": [
     {
       "ordem": 1,
       "tipo": "tensao",
-      "headline": "Você quer investir antes",
-      "subtexto": "Mas pula a etapa que sustenta tudo o que vem depois",
-      "texto_meta": "MANUAL DO DINHEIRO · 01 / 02",
-      "sujeito_visual": "escada de madeira encostada em parede creme com primeiro degrau quebrado, luz lateral suave"
+      "titulo": [["Sua reserva", "r"], ["está menor", "r"], ["do que você", "r"], ["pensa.", "i"]],
+      "cap_nome": "A Reserva de Emergência",
+      "cap_desc": ["Quase todo mundo calcula errado.", "O número certo te protege —", "o errado te dá falsa segurança."],
+      "texto_meta": "MANUAL DO DINHEIRO  ·  CAP. {{CAP}}"
     },
     {
       "ordem": 2,
       "tipo": "resolucao",
-      "titulo": [["Por onde", "r"], ["começar.", "i_underline"]],
+      "titulo": [["A conta", "r"], ["certa.", "i_underline"]],
       "bullets": [
-        ["01", "Mapear", "Saber pra onde seu dinheiro está indo todo mês."],
-        ["02", "Reservar", "Construir a reserva de emergência antes de qualquer investimento."],
-        ["03", "Direcionar", "Definir objetivos com prazo e valor — não só desejos."]
+        ["01", "Mapear", "Liste seus gastos fixos do último mês inteiro."],
+        ["02", "Multiplicar", "Custo fixo × 6 — não a renda × 6."],
+        ["03", "Guardar", "Liquidez diária: CDB que rende todo dia ou Tesouro Selic."]
       ],
-      "tagline": ["Não pule a etapa 02.", "Investir sem reserva é", "construir em areia."],
-      "texto_meta": "MANUAL DO DINHEIRO  ·  02 / 02"
+      "tagline": ["O cálculo certo", "começa pelo gasto,", "não pela renda."],
+      "texto_meta": "MANUAL DO DINHEIRO  ·  CAP. {{CAP}}"
     }
   ]
 }
