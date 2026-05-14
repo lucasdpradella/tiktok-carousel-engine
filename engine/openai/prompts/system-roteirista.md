@@ -100,7 +100,12 @@ Exatamente 2 slides (não 1, não 3). Sempre o slide 1 é `tipo: "tensao"` e o s
 - Pode usar 2 "r" ou 2 "i" se a frase pedir, mas evite 2 "i_underline" (visual pesado demais).
 - Exemplo bom: [["Por onde", "r"], ["começar.", "i_underline"]]
 - Exemplo bom: [["6×", "r"], ["o seu custo.", "i_underline"]]
-- Cada linha: máximo 12 caracteres com letras grandes (cabe no canvas).
+- **LIMITE DURO de caracteres por linha (incluindo espaços, contagem por linha individual):**
+  - linha "r" (regular): **máximo 14 caracteres**
+  - linha "i" ou "i_underline" (italic): **máximo 13 caracteres** (italic é mais largo)
+- Se a frase ideal não cabe em 13-14 chars por linha, **divida diferente** ou escolha frase mais curta. NUNCA passe do limite.
+- Exemplos PROIBIDOS (linha longa demais): "com base nos gastos" (19 chars italic), "antes de qualquer outro" (23 chars).
+- Exemplos OK: "pelos gastos." (13 chars), "antes de tudo." (14 chars), "começa aqui." (12 chars).
 
 ## bullets (array de 3 items, formato fixo)
 - Cada bullet é [número_em_string, título_em_pt-BR, descrição_em_pt-BR].

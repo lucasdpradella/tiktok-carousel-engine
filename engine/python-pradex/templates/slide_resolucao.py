@@ -136,9 +136,27 @@ def render_slide_resolucao(
     d.line([(M, 145), (W - M, 145)], fill=(*INK, 90), width=2)
 
     # 3. HEADLINE (Lora, 2 linhas, suporta italic + underline orange)
+    # Auto-fit: se alguma linha estourar a largura útil (W - 2*M), encolhe a fonte até caber.
+    # Evita o caso clássico de o modelo gerar linha 2 longa demais (ex: "com base nos gastos").
     y = 230
-    line_h = 125
-    headline_size = 105
+    max_size = 105
+    min_size = 60
+    available_w = W - 2 * M
+    headline_size = max_size
+    while headline_size >= min_size:
+        ok = True
+        for line, style in titulo:
+            font_key = 'lora-i' if style.startswith('i') else 'lora-r'
+            font = F(font_key, headline_size)
+            box = font.getbbox(line)
+            if (box[2] - box[0]) > available_w:
+                ok = False
+                break
+        if ok:
+            break
+        headline_size -= 5
+    # Espaço entre linhas escala com o tamanho da fonte
+    line_h = int(headline_size * 1.19)
     for line, style in titulo:
         font_key = 'lora-i' if style.startswith('i') else 'lora-r'
         font = F(font_key, headline_size)
@@ -147,7 +165,7 @@ def render_slide_resolucao(
             box = font.getbbox(line)
             line_w = box[2] - box[0]
             # underline bem abaixo do descender pra não bater no "ç" ou "ç"
-            underline_y = y + headline_size + 22
+            underline_y = y + headline_size + int(headline_size * 0.21)
             d.rectangle(
                 [(M, underline_y), (M + line_w, underline_y + 4)],
                 fill=ACCENT,
