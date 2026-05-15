@@ -3,6 +3,13 @@ name: post-tiktok
 # Cron: 7h BRT (= 10:00 UTC) a cada 2 dias → "dia sim, dia não"
 # GitHub Actions cron tem ~5-15min de jitter; aceitável pro caso.
 # workflow_dispatch permite rodar manualmente pra smoke tests.
+#
+# MODO MANUAL TRANSITÓRIO (desde 2026-05-15):
+#   Enquanto a audit do app TikTok não aprovar Direct Post, schedule roda em
+#   dry-run forçado (DRY_RUN=true). Gera o carrossel completo + caption,
+#   sobe como artifact, mas NÃO chama upload-post.com. Lucas baixa o artifact
+#   e posta manualmente. Quando audit aprovar, migrar postar.mjs pra
+#   open.tiktokapis.com e remover o lock abaixo.
 
 on:
   schedule:
@@ -10,13 +17,13 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run (gera mas não posta)'
+        description: 'Dry run (gera mas não posta) — default TRUE enquanto audit TikTok não aprova'
         required: false
-        default: 'false'
+        default: 'true'
         type: choice
         options:
-          - 'false'
           - 'true'
+          - 'false'
       scheduled_date:
         description: 'ISO-8601 opcional pra agendar (ex 2026-05-15T07:00:00). Vazio = posta imediato.'
         required: false
@@ -38,7 +45,9 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       PIPELINE_NICHO: financas-comportamentais
-      DRY_RUN: ${{ inputs.dry_run || 'false' }}
+      # Schedule (cron) sem inputs ⇒ inputs.dry_run vira "" ⇒ fallback 'true'
+      # (modo manual transitório, ver header). workflow_dispatch respeita escolha.
+      DRY_RUN: ${{ inputs.dry_run || 'true' }}
       SCHEDULED_DATE: ${{ inputs.scheduled_date || '' }}
       TIMEZONE: America/Sao_Paulo
       OPENAI_PYTHON_BIN: python3

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidade — tiktok-carousel-engine</title>
+  <style>
+    :root {
+      --bg: #F0EAE0;
+      --ink: #1A1A1A;
+      --accent: #C04A2B;
+      --muted: #6F6A60;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.65;
+    }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 32px 96px;
+    }
+    h1 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 700;
+      font-size: 2rem;
+      margin: 0 0 8px;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 40px;
+    }
+    h2 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.3rem;
+      margin-top: 36px;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+    p { margin: 0 0 16px; }
+    a { color: var(--accent); }
+    .back {
+      display: inline-block;
+      margin-bottom: 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .back:hover { color: var(--accent); }
+    ul { margin: 0 0 16px; padding-left: 24px; }
+    li { margin-bottom: 6px; }
+    .highlight {
+      background: rgba(192, 74, 43, 0.08);
+      border-left: 4px solid var(--accent);
+      padding: 16px 20px;
+      margin: 24px 0;
+      border-radius: 0 4px 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="index.html">← Voltar</a>
+    <h1>Política de Privacidade</h1>
+    <p class="meta">tiktok-carousel-engine · Última atualização: 15 de maio de 2026</p>
+
+    <div class="highlight">
+      <strong>Resumo em uma linha:</strong> o App não coleta, não armazena e não compartilha
+      nenhum dado pessoal de usuários do TikTok. Não há banco de dados de terceiros.
+    </div>
+
+    <h2>1. Natureza do App</h2>
+    <p>
+      "<strong>tiktok-carousel-engine</strong>" é um app de uso estritamente pessoal mantido por
+      <strong>Lucas Pradella</strong> (<a href="mailto:lucasdpradella@gmail.com">lucasdpradella@gmail.com</a>).
+      Ele publica conteúdo próprio na conta TikTok do dono
+      (<a href="https://www.tiktok.com/@pradella.lucas" target="_blank" rel="noopener">@pradella.lucas</a>)
+      via Content Posting API. Não há interface pública. Não há cadastro de usuários. Não há
+      atendimento a terceiros.
+    </p>
+
+    <h2>2. Dados que NÃO coletamos</h2>
+    <p>
+      O App <strong>não coleta nenhum dado pessoal de usuários do TikTok</strong>. Especificamente:
+    </p>
+    <ul>
+      <li>Não captura visualizações, curtidas, comentários, seguidores ou métricas de outras contas.</li>
+      <li>Não lê o feed, descoberta, busca, mensagens diretas ou notificações do TikTok.</li>
+      <li>Não acessa lista de seguidores, seguidos ou contatos do dono.</li>
+      <li>Não usa cookies de rastreamento. Não há analytics. Não há pixels de terceiros.</li>
+    </ul>
+
+    <h2>3. Dados que usamos (do próprio dono)</h2>
+    <p>
+      Pra funcionar, o App usa dois conjuntos de credenciais do próprio dono, armazenados como
+      <em>secrets</em> criptografados na infraestrutura interna (GitHub Actions Secrets, Supabase
+      Vault). Nenhum desses dados é compartilhado com terceiros.
+    </p>
+    <ul>
+      <li><strong>Token OAuth do TikTok</strong> da conta @pradella.lucas — usado exclusivamente pra publicar carrosséis na própria conta.</li>
+      <li><strong>API key do OpenAI</strong> — usada pra gerar o texto do roteiro de cada carrossel.</li>
+      <li><strong>Credenciais do Supabase</strong> — usadas pra controlar a fila de temas (qual já foi publicado, qual é o próximo).</li>
+    </ul>
+
+    <h2>4. Armazenamento e retenção</h2>
+    <p>
+      O App armazena exclusivamente:
+    </p>
+    <ul>
+      <li>Lista de temas autorais a serem publicados (texto curto, escrito pelo dono).</li>
+      <li>Status de publicação de cada tema (publicado / pendente, com timestamp).</li>
+      <li>Imagens PNG geradas pra cada post, mantidas como artifact do GitHub Actions por até 14 dias após geração — depois são automaticamente apagadas.</li>
+    </ul>
+    <p>
+      Nenhum desses dados é pessoal de terceiros. São dados do próprio dono e do conteúdo
+      autoral publicado.
+    </p>
+
+    <h2>5. Compartilhamento com terceiros</h2>
+    <p>
+      O App se comunica com três serviços externos, todos contratados pelo dono e usados em
+      modo pessoal:
+    </p>
+    <ul>
+      <li><strong>TikTok</strong> — pra publicar o carrossel autoral.</li>
+      <li><strong>OpenAI</strong> — pra gerar o texto do roteiro.</li>
+      <li><strong>Supabase</strong> e <strong>GitHub</strong> — pra hospedar a fila de temas e rodar o agendamento.</li>
+    </ul>
+    <p>
+      Em nenhum desses casos há transmissão de dados pessoais de terceiros, porque o App nunca
+      coleta esse tipo de dado.
+    </p>
+
+    <h2>6. Direitos do titular</h2>
+    <p>
+      Como o App não coleta dados pessoais de usuários, não há dados de terceiros pra acessar,
+      corrigir ou excluir. Mesmo assim, qualquer pessoa que se sentir afetada pode entrar em
+      contato pra esclarecimentos:
+      <a href="mailto:lucasdpradella@gmail.com">lucasdpradella@gmail.com</a>.
+    </p>
+
+    <h2>7. Alterações desta Política</h2>
+    <p>
+      Esta Política pode ser atualizada sem aviso prévio. A versão vigente é sempre a publicada
+      neste endereço. Versões anteriores ficam preservadas no histórico do repositório público.
+    </p>
+
+    <h2>8. Conformidade</h2>
+    <p>
+      Este App busca operar em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei
+      13.709/2018) do Brasil e com os princípios do GDPR europeu, sendo que sua natureza de
+      uso pessoal sem coleta de dados de terceiros minimiza o escopo de aplicação dessas
+      regulações.
+    </p>
+  </div>
+</body>
+</html>
