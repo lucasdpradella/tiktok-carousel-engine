@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OAuth Callback — tiktok-carousel-engine</title>
+  <style>
+    :root {
+      --bg: #F0EAE0;
+      --ink: #1A1A1A;
+      --accent: #C04A2B;
+      --muted: #6F6A60;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.55;
+    }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 32px 96px;
+    }
+    h1 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 700;
+      font-size: 1.8rem;
+      margin: 0 0 8px;
+      color: var(--accent);
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+    h2 {
+      font-family: Georgia, serif;
+      font-size: 1.2rem;
+      margin-top: 32px;
+      margin-bottom: 12px;
+    }
+    pre {
+      background: rgba(0,0,0,0.06);
+      border-left: 4px solid var(--accent);
+      padding: 16px 20px;
+      border-radius: 0 4px 4px 0;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+    .err {
+      background: rgba(192, 74, 43, 0.1);
+      border-left: 4px solid var(--accent);
+      padding: 16px 20px;
+      border-radius: 0 4px 4px 0;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .ok {
+      color: #2d6a4f;
+      font-weight: 600;
+    }
+    .back {
+      display: inline-block;
+      margin-top: 32px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .back:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>OAuth Callback</h1>
+    <p class="meta">tiktok-carousel-engine · página de callback do OAuth do TikTok</p>
+
+    <div id="content">Lendo parâmetros…</div>
+
+    <h2>Como funciona</h2>
+    <p>
+      Esta página é o endpoint <code>redirect_uri</code> do Login Kit do TikTok.
+      Depois do dono do app autorizar a aplicação no TikTok, o TikTok redireciona
+      pra cá com o parâmetro <code>code</code> na URL. O dono copia esse <code>code</code>
+      e troca por um <code>access_token</code> de longa duração via chamada server-side
+      (uma vez só — depois o token vive como GitHub Secret).
+    </p>
+    <p>
+      Esta página <strong>não envia nada pra lugar nenhum</strong>. Só exibe o
+      <code>code</code> recebido pra cópia manual. Nenhum dado sai do seu navegador.
+    </p>
+
+    <a class="back" href="index.html">← Voltar</a>
+  </div>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var code = params.get('code');
+      var state = params.get('state');
+      var scopes = params.get('scopes');
+      var error = params.get('error') || params.get('error_description');
+      var content = document.getElementById('content');
+
+      if (error) {
+        content.innerHTML =
+          '<h2>Erro retornado pelo TikTok</h2>' +
+          '<div class="err">' + escapeHtml(error) + '</div>';
+        return;
+      }
+
+      if (!code) {
+        content.innerHTML =
+          '<h2>Nenhum code recebido</h2>' +
+          '<p>Esta página espera ser aberta como redirect_uri do OAuth do TikTok, com o parâmetro <code>code</code> na URL. Acesso direto não retorna nada.</p>';
+        return;
+      }
+
+      var html = '<h2 class="ok">✓ Authorization code recebido</h2>' +
+        '<p>Copia este valor e troca por access_token na próxima etapa:</p>' +
+        '<pre id="code">' + escapeHtml(code) + '</pre>';
+
+      if (state) {
+        html += '<h2>State</h2><pre>' + escapeHtml(state) + '</pre>';
+      }
+      if (scopes) {
+        html += '<h2>Scopes autorizados</h2><pre>' + escapeHtml(scopes) + '</pre>';
+      }
+
+      content.innerHTML = html;
+    })();
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
