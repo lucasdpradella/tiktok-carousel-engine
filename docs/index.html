@@ -100,7 +100,9 @@
       (function () {
         var btn = document.getElementById('authorize-tiktok');
         if (!btn) return;
-        var CLIENT_KEY = 'aw56ji9ahu6e3drw';
+        // Sandbox client_key (Sandbox tem credenciais próprias, separadas da Production).
+        // Quando audit aprovar e for pra Production, trocar pelo client_key de prod 'aw56ji9ahu6e3drw'.
+        var CLIENT_KEY = 'sbawzyrbk3cm85b78d';
         var REDIRECT_URI = 'https://lucasdpradella.github.io/tiktok-carousel-engine/oauth-callback.html';
         var SCOPES = 'user.info.basic,video.upload';
         var state = Math.random().toString(36).slice(2, 14);
