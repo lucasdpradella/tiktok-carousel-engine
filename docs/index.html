@@ -85,6 +85,35 @@
       <a href="privacy.html">Política de Privacidade</a>
     </div>
 
+    <h2>Authorize TikTok app</h2>
+    <p>
+      Este botão inicia o fluxo OAuth do Login Kit do TikTok pra autorizar o app
+      <strong>tiktok-carousel-engine</strong> a publicar carrosséis na conta do dono
+      (@pradella.lucas). Scopes solicitados: <code>user.info.basic</code> + <code>video.upload</code>.
+    </p>
+
+    <div class="links">
+      <a id="authorize-tiktok" href="#">Authorize TikTok app</a>
+    </div>
+
+    <script>
+      (function () {
+        var btn = document.getElementById('authorize-tiktok');
+        if (!btn) return;
+        var CLIENT_KEY = 'aw56ji9ahu6e3drw';
+        var REDIRECT_URI = 'https://lucasdpradella.github.io/tiktok-carousel-engine/oauth-callback.html';
+        var SCOPES = 'user.info.basic,video.upload';
+        var state = Math.random().toString(36).slice(2, 14);
+        var url = 'https://www.tiktok.com/v2/auth/authorize/' +
+          '?client_key=' + encodeURIComponent(CLIENT_KEY) +
+          '&scope=' + encodeURIComponent(SCOPES) +
+          '&response_type=code' +
+          '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
+          '&state=' + encodeURIComponent(state);
+        btn.href = url;
+      })();
+    </script>
+
     <h2>Sobre o projeto</h2>
     <p>
       <strong>Manual do Dinheiro</strong> é uma série autoral de carrosséis sobre finanças comportamentais
