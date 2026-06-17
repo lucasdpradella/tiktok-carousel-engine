@@ -1,6 +1,7 @@
 name: post-tiktok
 
-# Cron: 7h BRT (= 10:00 UTC) a cada 2 dias → "dia sim, dia não"
+# Cron: 8h BRT (= 11:00 UTC) a cada 2 dias → "dia sim, dia não"
+# (Brasil é UTC-3 o ano todo, sem horário de verão.)
 # GitHub Actions cron tem ~5-15min de jitter; aceitável pro caso.
 # workflow_dispatch permite rodar manualmente pra smoke tests.
 #
@@ -13,7 +14,7 @@ name: post-tiktok
 
 on:
   schedule:
-    - cron: '0 10 */2 * *'
+    - cron: '0 11 */2 * *'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -42,8 +43,6 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       UPLOAD_POST_API_KEY: ${{ secrets.UPLOAD_POST_API_KEY }}
       UPLOAD_POST_USER: ${{ secrets.UPLOAD_POST_USER || 'lucaspradella' }}
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       PIPELINE_NICHO: financas-comportamentais
       # Schedule (cron) sem inputs ⇒ inputs.dry_run vira "" ⇒ fallback 'true'
       # (modo manual transitório, ver header). workflow_dispatch respeita escolha.
@@ -51,10 +50,9 @@ jobs:
       SCHEDULED_DATE: ${{ inputs.scheduled_date || '' }}
       TIMEZONE: America/Sao_Paulo
       OPENAI_PYTHON_BIN: python3
-      # Numeração de capítulo (Manual do Dinheiro). Default 4 — Lucas já publicou CAP. 03 fora.
-      # Cada post published incrementa: chapter = OFFSET + count(posts.status='published')
-      CHAPTER_OFFSET: ${{ vars.CHAPTER_OFFSET || '4' }}
-      CHAPTER_TOTAL: ${{ vars.CHAPTER_TOTAL || '8' }}
+      # Fila de temas + numeração de capítulo agora vivem em engine/openai/data/
+      # (temas.json + estado.json). Supabase descomissionado em 2026-06-17. As GitHub
+      # Variables CHAPTER_OFFSET/CHAPTER_TOTAL ficaram sem uso (podem ser deletadas).
 
     steps:
       - name: Checkout repo

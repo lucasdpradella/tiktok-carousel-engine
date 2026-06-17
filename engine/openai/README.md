@@ -1,6 +1,6 @@
 # engine/openai — Engine OpenAI (ATIVA)
 
-> Engine de produção do projeto TIKTOK. Gera 5 imagens editoriais Pradex por post, com tipografia overlay renderizada pela própria IA. Mantém a infra do entorno (n8n, Supabase, upload-post.com) e substitui o ciclo de geração interno.
+> Engine de produção do projeto TIKTOK. Gera as imagens editoriais Pradex por post, com tipografia overlay determinística (templates Python). Roda 100% dentro do GitHub Actions a custo zero: a fila de temas e a numeração de capítulo vivem versionadas em `data/temas.json` + `data/estado.json` (sem Supabase desde 2026-06-17).
 
 **Criada em:** 2026-05-13 (pivô Gemini → OpenAI — billing Google travou)
 **Status:** estrutura completa + smoke test individual `gpt-image-1` OK · smoke test carrossel pendente run pelo Lucas
@@ -78,11 +78,24 @@ tópico (string)
    └─→ { caption, hashtags, slidePaths[5] }
 ```
 
+## Fila de temas + numeração de capítulo (sem Supabase)
+
+Desde 2026-06-17 a engine não fala mais com o Supabase. A fila e a numeração
+vivem em dois arquivos versionados em `data/`:
+
+- **`data/temas.json`** — array ordenado dos temas que faltam publicar, na ordem de publicação.
+  Cada item: `{ tema, angulo, serie, ordem_serie, notas }`. `tema` → `opts.topico`, `angulo` → `opts.angulo`.
+- **`data/estado.json`** — `{ indice_atual, capitulo_offset, total_capitulos }`.
+  - Próximo post = `temas[indice_atual]`.
+  - Número do capítulo = `capitulo_offset + indice_atual`.
+
+O `src/run-completo.mjs` lê esses arquivos, gera o carrossel e (em `DRY_RUN`, modo manual
+de hoje) deixa o artifact **sem** avançar o índice. Depois de postar manualmente, o Lucas
+roda `npm run avancar` (incrementa `indice_atual`, regrava `estado.json`) + commit.
+
 Próximas integrações (fora da engine):
 
-- Upload no Supabase Storage (bucket `carousels`)
-- Disparo via n8n (HTTP node) — substitui a chamada antiga ao `/api/slide` da engine Satori
-- Publicação no TikTok via upload-post.com (já configurado)
+- Publicação no TikTok via upload-post.com / Content Posting API (Fase 4, pós-audit)
 
 ## Ver também
 

@@ -11,7 +11,8 @@
     "smoke": "node ../../scripts/smoke-openai.mjs",
     "carrossel": "node ../../scripts/smoke-carrossel.mjs",
     "roteiro": "node src/gerar-roteiro.mjs",
-    "imagem": "node src/gerar-imagem.mjs"
+    "imagem": "node src/gerar-imagem.mjs",
+    "avancar": "node src/avancar.mjs"
   },
   "dependencies": {}
 }

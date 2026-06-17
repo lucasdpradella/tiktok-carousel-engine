@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/lucas/OneDrive/Área de Trabalho/Chave Mestre/Projetos/TIKTOK/**)",
+      "Bash(where python *)",
+      "Bash(where py *)",
+      "Bash(py --version)",
+      "Bash(node --check src/run-completo.mjs)",
+      "Bash(node --check src/avancar.mjs)",
+      "Bash(python3 -c \"print\\('py ok'\\)\")",
+      "Bash(node verify-tmp.mjs)",
+      "Bash(node src/avancar.mjs)",
+      "Bash(mv -f data/estado.json.bak data/estado.json)"
+    ]
+  }
+}

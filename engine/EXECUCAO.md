@@ -5,6 +5,15 @@
 **Tempo total ativo:** ~40 min (não conta espera passiva do audit TikTok)
 **Última atualização:** 2026-05-12
 
+> **⚠️ Atualização 2026-06-17 — Supabase descomissionado.** A engine ativa (`engine/openai/`)
+> NÃO usa mais o Supabase. A fila de temas e a contagem de capítulo migraram pra dois arquivos
+> versionados no repo: `engine/openai/data/temas.json` (fila ordenada) e `data/estado.json`
+> (`indice_atual` + `capitulo_offset` + `total_capitulos`). O pipeline roda 100% no GitHub Actions
+> a custo zero. **A Fase 2 (Supabase) e os trechos Postgres da Fase 7/8 abaixo são histórico** —
+> o projeto `tiktok-engine` foi pausado pra liberar o slot do Free (Pradex + CRM continuam).
+
+
+
 ## Decisões já tomadas
 
 - n8n: **n8n Cloud** (app.n8n.cloud)

@@ -9,7 +9,7 @@ Layout fixo (Layout A — capa de capítulo), data-driven. Recebe:
 - cap_num: "04" (string com zero à esquerda)
 - cap_nome: "A Reserva de Emergência"
 - cap_desc: lista de 1-3 strings (descrição curta do capítulo)
-- cap_total: "08" (default, aparece no rodapé "uma série em 8 partes")
+- cap_total: "08" (legado; não é mais renderizado — mantido por compat do caller)
 
 CLI: python slide_tensao.py <input_json> <output_png>
 """
@@ -171,14 +171,11 @@ def render_slide_tensao(
         d.text((M, desc_y), line, font=desc_font, fill=INK_SOFT)
         desc_y += 32
 
-    # 6. RODAPÉ — "deslize ››" à esquerda + "uma série em N partes" à direita
+    # 6. RODAPÉ — só "deslize ››" à esquerda.
+    # (Removido o "uma série em N partes": a série passou de 8 pra 33+ capítulos e a
+    #  contagem fixa ficaria errada. cap_total mantido na assinatura por compat do caller.)
     rodape_y = 1430
     d.text((M, rodape_y), 'deslize  ›  ›', font=F('pop-m', 24), fill=ACCENT)
-    serie_font = F('pop-r', 22)
-    serie_text = f'uma série em {int(cap_total)} partes'
-    sbox = serie_font.getbbox(serie_text)
-    serie_w = sbox[2] - sbox[0]
-    d.text((W - M - serie_w, rodape_y + 2), serie_text, font=serie_font, fill=INK_SOFT)
 
     composed = Image.alpha_composite(base, overlay).convert('RGB')
     final = add_grain(composed, intensity=5)
