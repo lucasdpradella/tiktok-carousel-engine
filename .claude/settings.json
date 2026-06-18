@@ -10,7 +10,16 @@
       "Bash(python3 -c \"print\\('py ok'\\)\")",
       "Bash(node verify-tmp.mjs)",
       "Bash(node src/avancar.mjs)",
-      "Bash(mv -f data/estado.json.bak data/estado.json)"
+      "Bash(mv -f data/estado.json.bak data/estado.json)",
+      "Bash(node --check scripts/tiktok-oauth-prod.mjs)",
+      "Bash(node scripts/tiktok-oauth-prod.mjs url)",
+      "Bash(cat \"/c/Users/lucas/.claude/projects/c--Users-lucas-Documents-tiktok-clone/memory/MEMORY.md\" 2>/dev/null || echo \"NO_MEMORY_FILE\")",
+      "Read(//c/Users/lucas/.claude/projects/c--Users-lucas-Documents-tiktok-clone/memory/**)",
+      "Bash(git check-ignore *)",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"try{const y=require\\('js-yaml'\\);const fs=require\\('fs'\\);y.load\\(fs.readFileSync\\('.github/workflows/post-tiktok.yml','utf8'\\)\\);console.log\\('YAML parse OK'\\)}catch\\(e\\){console.log\\('skip/parse:',e.message.split\\('\\\\n'\\)[0]\\)}\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}  final=%{url_effective}\\\\n\" -L \"https://lucasdpradella.github.io/tiktok-carousel-engine/oauth-callback.html\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -L \"https://lucasdpradella.github.io/tiktok-carousel-engine/\")"
     ]
   }
 }
