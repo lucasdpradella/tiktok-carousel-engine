@@ -1,46 +1,69 @@
 // run-completo.mjs
-// Orquestrador end-to-end pro GitHub Actions cron.
+// Orquestrador do GitHub Actions, em DUAS FASES (a Content Posting API puxa as
+// imagens por URL, então elas precisam estar públicas no GitHub Pages ANTES do
+// content/init — o git que publica acontece ENTRE as fases, no workflow).
 //
-// Fila + numeração de capítulo vivem em dois arquivos versionados no repo
-// (sem Supabase desde 2026-06-17 — ver engine/openai/data/):
-//   - data/temas.json  → array ordenado dos temas que faltam publicar
-//   - data/estado.json → ponteiro (indice_atual) + numeração (capitulo_offset, total_capitulos)
+//   FASE 1 — generate  (node src/run-completo.mjs):
+//     1. Lê data/temas.json + data/estado.json → topic = temas[indice_atual]
+//     2. gerarCarrossel() → roteiro + 2 PNGs (templates Python)
+//     3. Converte os PNGs → JPEG (TikTok não aceita PNG em foto)
+//     4. (se !DRY_RUN) copia os JPEGs pra docs/post-YYYY-MM-DD/ (servido pelo Pages)
+//        e grava outputs/last-post.json (manifesto pra Fase 2)
+//     → workflow comita/pusha docs/ e espera o Pages publicar
 //
-// Pipeline:
-//   1. Lê data/temas.json + data/estado.json → topic = temas[indice_atual]
-//   2. OpenAI: gerarRoteiro() → caption + hashtags + 2 slides estruturados
-//   3. Em paralelo:
-//      - slide 1 (TENSÃO) → template Python (slide_tensao.py)
-//      - slide 2 (RESOLUÇÃO) → template Python (slide_resolucao.py)
-//   4. DRY_RUN=true (modo manual, sempre ligado hoje): gera + deixa artifact, NÃO posta,
-//      NÃO avança o índice. O Lucas avança explícito depois de postar: `npm run avancar`.
-//   5. Post real (Fase 4, dormente hoje): postar.mjs → incrementa indice_atual + regrava estado.json.
+//   FASE 2 — post  (node src/run-completo.mjs --post):
+//     5. Lê o manifesto + faz HEAD nas URLs do Pages até 200 (timeout ~5min)
+//     6. refreshAccessToken() → access_token fresco (avisa se o refresh rotacionou)
+//     7. postarTikTokInbox() → publish_id (MEDIA_UPLOAD = cai no inbox do @pradella.lucas)
+//     8. Avança data/estado.json (indice_atual += 1)
+//     → workflow comita/pusha data/estado.json
+//
+// DRY_RUN=true: roda só a Fase 1 sem stagear em docs/ — gera o artifact (PNG+JPEG),
+// não posta e não avança. (O workflow nem chama a Fase 2 quando dry-run.)
+//
+// Degradação graciosa: MEDIA_UPLOAD nunca publica sozinho. Qualquer falha de Pages
+// ou de init deixa o artifact de pé e o Lucas posta manual — nada é destrutivo.
 //
 // Falhas: logam stack + exit code != 0 (GitHub Actions marca o run como failed).
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, copyFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gerarCarrossel } from './gerar-carrossel.mjs';
-import { postarTikTok } from './postar.mjs';
+import { pngToJpeg } from './converter-jpeg.mjs';
+import { refreshAccessToken, postarTikTokInbox, getPostStatus, montarTextos } from './postar.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = resolve(__dirname, '../data');
 const TEMAS_PATH = resolve(DATA_DIR, 'temas.json');
 const ESTADO_PATH = resolve(DATA_DIR, 'estado.json');
+const OUTPUTS_DIR = resolve(__dirname, '../outputs');
+const MANIFEST_PATH = resolve(OUTPUTS_DIR, 'last-post.json');
+// docs/ (raiz do repo) é o que o GitHub Pages serve.
+const DOCS_DIR = resolve(__dirname, '../../../docs');
+const PAGES_BASE = (
+  process.env.PAGES_BASE_URL || 'https://lucasdpradella.github.io/tiktok-carousel-engine'
+).replace(/\/$/, '');
 
-const SCHEDULED_DATE = process.env.SCHEDULED_DATE; // opcional ISO-8601
-const TIMEZONE = process.env.TIMEZONE || 'America/Sao_Paulo';
 const DRY_RUN = process.env.DRY_RUN === 'true';
+const POST_PHASE = process.argv.includes('--post');
+
+// Pages não publica na hora — faz HEAD até 200, com timeout.
+const PAGES_POLL_TIMEOUT_MS = 5 * 60 * 1000;
+const PAGES_POLL_INTERVAL_MS = 10 * 1000;
 
 async function lerJSON(path) {
   return JSON.parse(await readFile(path, 'utf-8'));
 }
 
-async function main() {
-  console.log(`[run] iniciando — dryRun=${DRY_RUN}`);
+function hoje() {
+  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+}
 
-  // 1. Lê fila + estado dos arquivos versionados
+// ── FASE 1 — gerar + converter + stagear ────────────────────────────────────
+async function gerar() {
+  console.log(`[run] FASE 1 (generate) — dryRun=${DRY_RUN}`);
+
   const temas = await lerJSON(TEMAS_PATH);
   const estado = await lerJSON(ESTADO_PATH);
   const idx = estado.indice_atual;
@@ -59,7 +82,7 @@ async function main() {
     `[run] tema #${idx}: "${topic.tema}" (ângulo=${topic.angulo}) — CAP. ${chapterNumber}/${chapterTotal}`
   );
 
-  // 2. Gera roteiro + 3. gera 2 slides em paralelo
+  // gerarCarrossel → PNGs (artifact)
   const r = await gerarCarrossel({
     topico: topic.tema,
     angulo: topic.angulo,
@@ -68,38 +91,120 @@ async function main() {
   });
   console.log(`[run] carrossel pronto em ${r.outputDir}`);
 
+  // Converte cada PNG → JPEG (no próprio dir do artifact)
+  const jpgPaths = [];
+  for (const png of r.slidePaths) {
+    const jpg = png.replace(/\.png$/i, '.jpg');
+    const out = await pngToJpeg(png, jpg);
+    console.log(`[run] JPEG: ${jpg} (${Math.round(out.sizeBytes / 1024)} KB)`);
+    jpgPaths.push(jpg);
+  }
+
   if (DRY_RUN) {
-    console.log(
-      '[run] DRY_RUN=true → carrossel gerado como artifact. NÃO posta e NÃO avança o índice.'
-    );
+    console.log('[run] DRY_RUN=true → artifact (PNG+JPEG) gerado. NÃO staged em docs/, NÃO posta, NÃO avança.');
     console.log('[run] Pra avançar a fila depois de postar manualmente: npm run avancar');
-    console.log('[run] PIPELINE (dry-run) COMPLETO ✓');
+    console.log('[run] FASE 1 (dry-run) COMPLETA ✓');
     return;
   }
 
-  // 4. Post real (Fase 4 — dormente: postar.mjs ainda aponta pro caminho antigo e o
-  // workflow força dry-run). Mantido correto pra quando a audit liberar o Direct Post.
-  console.log(`[run] postando via TikTok (scheduled=${SCHEDULED_DATE || 'imediato'})`);
-  const postResult = await postarTikTok({
-    slidePaths: r.slidePaths,
-    caption: r.caption,
-    hashtags: r.hashtags,
-    scheduledDate: SCHEDULED_DATE,
-    timezone: SCHEDULED_DATE ? TIMEZONE : undefined,
-  });
-  console.log(`[run] post OK. request_id=${postResult.request_id}, job_id=${postResult.job_id}`);
+  // Stage dos JPEGs em docs/post-YYYY-MM-DD/ (o workflow comita/pusha → Pages)
+  const postDir = `post-${hoje()}`;
+  const destDir = resolve(DOCS_DIR, postDir);
+  await mkdir(destDir, { recursive: true });
+  const photoUrls = [];
+  for (let i = 0; i < jpgPaths.length; i++) {
+    const name = `slide-${String(i + 1).padStart(2, '0')}.jpg`;
+    await copyFile(jpgPaths[i], resolve(destDir, name));
+    photoUrls.push(`${PAGES_BASE}/${postDir}/${name}`);
+  }
+  console.log(`[run] ${photoUrls.length} JPEGs staged em docs/${postDir}/`);
 
-  // 5. Avança a fila: incrementa indice_atual e regrava estado.json
-  estado.indice_atual = idx + 1;
-  await writeFile(ESTADO_PATH, JSON.stringify(estado, null, 2) + '\n');
-  console.log(`[run] estado.json avançado → indice_atual=${estado.indice_atual}`);
-  // TODO Fase 4: commit-back no workflow (permissions: contents: write + step de git commit/push)
-  // pra persistir o estado.json incrementado de volta no repo após o post automático.
+  const { title, description } = montarTextos({ caption: r.caption, hashtags: r.hashtags });
 
-  console.log('[run] PIPELINE COMPLETO ✓');
+  await mkdir(OUTPUTS_DIR, { recursive: true });
+  await writeFile(
+    MANIFEST_PATH,
+    JSON.stringify({ postDir, photoUrls, title, description, indice: idx, chapterNumber }, null, 2) + '\n'
+  );
+  console.log(`[run] manifesto gravado em ${MANIFEST_PATH}`);
+  console.log('[run] FASE 1 COMPLETA ✓ — workflow comita docs/ e roda a Fase 2 (--post)');
 }
 
-main().catch((e) => {
+// ── FASE 2 — esperar Pages + refresh + postar + avançar ─────────────────────
+async function postar() {
+  console.log('[run] FASE 2 (post)');
+
+  const manifest = await lerJSON(MANIFEST_PATH);
+  const { photoUrls, title, description, indice } = manifest;
+
+  // 5. Espera o Pages publicar cada JPEG (HEAD até 200)
+  for (const url of photoUrls) {
+    await esperarPages(url);
+  }
+
+  // 6. Refresh do access_token
+  const clientKey = process.env.TIKTOK_CLIENT_KEY;
+  const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+  const refreshToken = process.env.TIKTOK_REFRESH_TOKEN;
+  const tok = await refreshAccessToken({ clientKey, clientSecret, refreshToken });
+  console.log(`[run] access_token ok (scope=${tok.scope}, expira em ${tok.expiresIn}s)`);
+  if (tok.rotated) {
+    // Caminho B (MVP): avisa alto. Migrar pro caminho A (persist-back via GitHub API) depois.
+    console.warn(
+      '[run] ⚠️ refresh_token ROTACIONOU — atualize o GitHub Secret TIKTOK_REFRESH_TOKEN ' +
+        'com o novo valor (o antigo pode parar de funcionar). Ver briefing §1c.'
+    );
+  }
+
+  // 7. Posta no inbox (MEDIA_UPLOAD)
+  const { publishId } = await postarTikTokInbox({
+    photoUrls,
+    title,
+    description,
+    accessToken: tok.accessToken,
+  });
+  console.log(`[run] content/init OK — publish_id=${publishId} (rascunho no inbox do @pradella.lucas)`);
+
+  // status best-effort (não bloqueia)
+  try {
+    const status = await getPostStatus({ publishId, accessToken: tok.accessToken });
+    console.log('[run] status:', JSON.stringify(status));
+  } catch (e) {
+    console.warn('[run] status fetch falhou (ignorado):', e.message);
+  }
+
+  // 8. Avança a fila (workflow comita data/estado.json)
+  const estado = await lerJSON(ESTADO_PATH);
+  estado.indice_atual = (typeof indice === 'number' ? indice : estado.indice_atual) + 1;
+  await writeFile(ESTADO_PATH, JSON.stringify(estado, null, 2) + '\n');
+  console.log(`[run] estado.json avançado → indice_atual=${estado.indice_atual}`);
+  console.log('[run] FASE 2 COMPLETA ✓ — Lucas finaliza o post no app TikTok');
+}
+
+async function esperarPages(url) {
+  const deadline = Date.now() + PAGES_POLL_TIMEOUT_MS;
+  let attempt = 0;
+  for (;;) {
+    attempt++;
+    try {
+      const res = await fetch(url, { method: 'HEAD', redirect: 'manual' });
+      if (res.status === 200) {
+        console.log(`[run] Pages OK (${attempt}x): ${url}`);
+        return;
+      }
+      console.log(`[run] Pages ainda não publicou (HTTP ${res.status}, tentativa ${attempt}): ${url}`);
+    } catch (e) {
+      console.log(`[run] Pages HEAD falhou (tentativa ${attempt}): ${e.message}`);
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`[run] timeout esperando o Pages publicar ${url} (>${PAGES_POLL_TIMEOUT_MS / 1000}s)`);
+    }
+    await new Promise((r) => setTimeout(r, PAGES_POLL_INTERVAL_MS));
+  }
+}
+
+const run = POST_PHASE ? postar : gerar;
+run().catch((e) => {
   console.error('[run] FALHA:', e.message);
   console.error(e.stack);
   process.exit(1);

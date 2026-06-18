@@ -5,12 +5,21 @@ name: post-tiktok
 # GitHub Actions cron tem ~5-15min de jitter; aceitável pro caso.
 # workflow_dispatch permite rodar manualmente pra smoke tests.
 #
-# MODO MANUAL TRANSITÓRIO (desde 2026-05-15):
-#   Enquanto a audit do app TikTok não aprovar Direct Post, schedule roda em
-#   dry-run forçado (DRY_RUN=true). Gera o carrossel completo + caption,
-#   sobe como artifact, mas NÃO chama upload-post.com. Lucas baixa o artifact
-#   e posta manualmente. Quando audit aprovar, migrar postar.mjs pra
-#   open.tiktokapis.com e remover o lock abaixo.
+# FASE 4 SEMI-AUTO (desde 2026-06-18):
+#   A engine empurra o carrossel pro INBOX/rascunho do @pradella.lucas via
+#   Content Posting API (post_mode MEDIA_UPLOAD, scope video.upload). Ele abre o
+#   TikTok e dá "postar" — a API nunca publica sozinha, então é seguro por construção.
+#   Fluxo em 2 fases (a API puxa as imagens por URL, então elas precisam estar
+#   públicas no Pages ANTES do content/init):
+#     FASE 1  node src/run-completo.mjs         → gera + converte PNG→JPEG + stage em docs/
+#     (git)   commita/pusha docs/post-*/        → GitHub Pages publica os JPEGs
+#     FASE 2  node src/run-completo.mjs --post  → espera Pages + refresh + content/init + avança estado
+#     (git)   commita/pusha data/estado.json
+#
+#   DRY_RUN=true (default do cron e do dispatch): roda só a FASE 1, gera o artifact
+#   (PNG+JPEG) e NÃO posta/avança. Pra postar de verdade: dispatch com dry_run=false.
+#   Começar testando em dispatch antes de soltar o cron pra postar (cron segue dry-run
+#   até o Lucas trocar o default ou passar dry_run:false).
 
 on:
   schedule:
@@ -18,41 +27,43 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run (gera mas não posta) — default TRUE enquanto audit TikTok não aprova'
+        description: 'Dry run (gera mas não posta no inbox) — default TRUE'
         required: false
         default: 'true'
         type: choice
         options:
           - 'true'
           - 'false'
-      scheduled_date:
-        description: 'ISO-8601 opcional pra agendar (ex 2026-05-15T07:00:00). Vazio = posta imediato.'
-        required: false
-        default: ''
-        type: string
+
+# Evita que cron + dispatch concorrentes colidam no git push.
+concurrency:
+  group: post-tiktok
+  cancel-in-progress: false
+
+permissions:
+  contents: write # commitar JPEGs em docs/ + estado.json de volta no repo
 
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: engine/openai
 
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      UPLOAD_POST_API_KEY: ${{ secrets.UPLOAD_POST_API_KEY }}
-      UPLOAD_POST_USER: ${{ secrets.UPLOAD_POST_USER || 'lucaspradella' }}
-      PIPELINE_NICHO: financas-comportamentais
-      # Schedule (cron) sem inputs ⇒ inputs.dry_run vira "" ⇒ fallback 'true'
-      # (modo manual transitório, ver header). workflow_dispatch respeita escolha.
+      # Content Posting API (Production). Secrets gerados no one-off OAuth (scripts/tiktok-oauth-prod.mjs).
+      TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+      TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+      # Cron sem inputs ⇒ inputs.dry_run vira "" ⇒ fallback 'true'. Dispatch respeita a escolha.
       DRY_RUN: ${{ inputs.dry_run || 'true' }}
-      SCHEDULED_DATE: ${{ inputs.scheduled_date || '' }}
-      TIMEZONE: America/Sao_Paulo
       OPENAI_PYTHON_BIN: python3
-      # Fila de temas + numeração de capítulo agora vivem em engine/openai/data/
-      # (temas.json + estado.json). Supabase descomissionado em 2026-06-17. As GitHub
-      # Variables CHAPTER_OFFSET/CHAPTER_TOTAL ficaram sem uso (podem ser deletadas).
+      # Fila de temas + numeração vivem em engine/openai/data/ (temas.json + estado.json).
+      # Supabase descomissionado em 2026-06-17; upload-post.com substituído pela
+      # Content Posting API em 2026-06-18. Secrets antigos UPLOAD_POST_*/SUPABASE_* e
+      # Variables CHAPTER_OFFSET/CHAPTER_TOTAL ficaram sem uso — podem ser deletados.
 
     steps:
       - name: Checkout repo
@@ -71,10 +82,46 @@ jobs:
       - name: Install Python deps (Pillow + numpy)
         run: pip install --upgrade pip && pip install pillow numpy
 
-      - name: Run end-to-end pipeline
+      # FASE 1 — gera o carrossel, converte PNG→JPEG e (se !dry-run) stagea em docs/
+      - name: Generate carousel (phase 1)
         run: node src/run-completo.mjs
 
-      - name: Upload outputs as artifact (debug)
+      # Publica os JPEGs no GitHub Pages (só no modo real)
+      - name: Commit & push images to Pages
+        if: env.DRY_RUN != 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/post-*/ || true
+          if git diff --cached --quiet; then
+            echo "Nada novo em docs/ pra commitar."
+          else
+            git commit -m "chore(tiktok): publica JPEGs do post (run ${{ github.run_id }})"
+            git push
+          fi
+
+      # FASE 2 — espera o Pages, refresh do token, content/init (inbox) e avança estado.json
+      - name: Post to inbox (phase 2)
+        if: env.DRY_RUN != 'true'
+        run: node src/run-completo.mjs --post
+
+      # Persiste o avanço da fila de volta no repo
+      - name: Commit & push estado.json
+        if: env.DRY_RUN != 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine/openai/data/estado.json
+          if git diff --cached --quiet; then
+            echo "estado.json sem mudança."
+          else
+            git commit -m "chore(tiktok): avança fila após post (run ${{ github.run_id }})"
+            git push
+          fi
+
+      - name: Upload outputs as artifact (debug + caminho manual)
         if: always()
         uses: actions/upload-artifact@v4
         with:

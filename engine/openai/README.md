@@ -93,9 +93,14 @@ O `src/run-completo.mjs` lê esses arquivos, gera o carrossel e (em `DRY_RUN`, m
 de hoje) deixa o artifact **sem** avançar o índice. Depois de postar manualmente, o Lucas
 roda `npm run avancar` (incrementa `indice_atual`, regrava `estado.json`) + commit.
 
-Próximas integrações (fora da engine):
+Publicação (Fase 4 semi-auto, desde 2026-06-18):
 
-- Publicação no TikTok via upload-post.com / Content Posting API (Fase 4, pós-audit)
+- O `run-completo.mjs` roda em 2 fases: **gera + converte PNG→JPEG + stagea em `docs/`**
+  (Fase 1) e, após o workflow publicar os JPEGs no GitHub Pages, **posta no inbox do
+  @pradella.lucas via Content Posting API** (`post_mode: MEDIA_UPLOAD`, scope `video.upload`)
+  e avança a fila (Fase 2, `--post`). O Lucas finaliza o post dentro do app — a API nunca
+  publica sozinha. Tokens via `scripts/tiktok-oauth-prod.mjs` (one-off) + GitHub Secrets.
+- Full-auto (`DIRECT_POST` / `video.publish`) exige novo audit — fica pra depois.
 
 ## Ver também
 
