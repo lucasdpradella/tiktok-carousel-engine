@@ -115,8 +115,10 @@ async function gerar() {
     return;
   }
 
-  // Stage dos JPEGs em docs/post-YYYY-MM-DD/ (o workflow comita/pusha → Pages)
-  const postDir = `post-${hoje()}`;
+  // Stage dos JPEGs em docs/post-YYYY-MM-DD-capNN/ (o workflow comita/pusha → Pages).
+  // O sufixo capNN garante URL única por post: evita colisão/cache do Pages quando
+  // 2 posts caem no mesmo dia (HEAD-poll passaria na imagem antiga do post anterior).
+  const postDir = `post-${hoje()}-cap${String(chapterNumber).padStart(2, '0')}`;
   const destDir = resolve(DOCS_DIR, postDir);
   await mkdir(destDir, { recursive: true });
   const photoUrls = [];
