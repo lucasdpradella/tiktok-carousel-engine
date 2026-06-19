@@ -25,7 +25,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  *   slides: Array<{ ordem: number, tipo: 'tensao'|'resolucao', headline: string, subtexto: string, texto_meta: string, sujeito_visual: string }>
  * }>}
  */
-export async function gerarRoteiro({ topico, angulo, puxada = false } = {}) {
+export async function gerarRoteiro({ topico, angulo, puxada = false, incluirCta = false } = {}) {
   if (!topico || typeof topico !== 'string') {
     throw new Error('[gerar-roteiro] opts.topico (string) obrigatorio');
   }
@@ -58,6 +58,21 @@ export async function gerarRoteiro({ topico, angulo, puxada = false } = {}) {
       'Como o slide3 já carrega o pitch, deixe a CAPTION mais editorial e leve — no MÁXIMO 1 menção discreta ao PRADEX, sem repetir a deixa forte.'
     : '';
 
+  // Deixa do PRADEX na caption (~1 a cada 3 posts; flag vem do run-completo).
+  // Nunca junto da puxada (o slide3 já faz o pitch) — o run-completo já garante isso.
+  const ctaInstr = incluirCta
+    ? '\n\nDEIXA PRADEX: ao FINAL da caption (depois do desenvolvimento), acrescente UMA única ' +
+      'deixa curta e natural divulgando o PRADEX (meu app de planejamento financeiro pessoal, grátis), ' +
+      'no tom de quem usa, não de quem vende. Sempre sobre ORGANIZAÇÃO/PLANEJAMENTO/CONTROLE — ' +
+      'NUNCA investimento/ativo. Termine em "link na bio". Escolha e varie (pode adaptar levemente ao tema):\n' +
+      '- "Esse controle eu faço lançando os gastos pelo WhatsApp no PRADEX, meu app. Link na bio — é grátis."\n' +
+      '- "Organização não é dom, é sistema. O meu é o PRADEX (link na bio)."\n' +
+      '- "Eu mantenho isso no automático com o PRADEX. Quer o mesmo? Link na bio."\n' +
+      '- "No PRADEX eu vejo isso num dashboard só. Link na bio pra testar."\n' +
+      '- "É assim que eu uso o PRADEX no dia a dia — link na bio se curtir a ideia."\n' +
+      'A deixa entra SÓ na caption (string), NUNCA nos slides. Caption total pode ir até ~320 chars neste caso.'
+    : '';
+
   const userPrompt =
     `Tópico: ${topico}\n` +
     (angulo
@@ -66,7 +81,8 @@ export async function gerarRoteiro({ topico, angulo, puxada = false } = {}) {
     '\n\nGere 2 slides (TENSÃO → RESOLUÇÃO)' +
     (puxada ? ' + o objeto slide3 (SOLUÇÃO)' : '') +
     ' em JSON estrito (sem markdown, sem comentário fora do objeto).' +
-    puxadaInstr;
+    puxadaInstr +
+    ctaInstr;
 
   let parsed;
   try {

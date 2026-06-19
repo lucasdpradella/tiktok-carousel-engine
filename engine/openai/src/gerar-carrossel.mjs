@@ -42,6 +42,7 @@ export async function gerarCarrossel({
   chapterNumber = 4,
   chapterTotal = 8,
   puxada = false,
+  incluirCta = false,
   pythonBin = process.env.OPENAI_PYTHON_BIN || 'python3',
 } = {}) {
   if (!topico) {
@@ -49,10 +50,11 @@ export async function gerarCarrossel({
   }
 
   console.log(
-    `[carrossel] gerando roteiro para: "${topico}" (CAP. ${chapterNumber}${puxada ? ', PUXADA' : ''})`
+    `[carrossel] gerando roteiro para: "${topico}" (CAP. ${chapterNumber}` +
+      `${puxada ? ', PUXADA' : ''}${incluirCta ? ', +deixa PRADEX' : ''})`
   );
   const t0Total = Date.now();
-  const roteiro = await gerarRoteiro({ topico, angulo, puxada });
+  const roteiro = await gerarRoteiro({ topico, angulo, puxada, incluirCta });
   console.log(`[carrossel] roteiro pronto. Caption: "${roteiro.caption.slice(0, 80)}..."`);
 
   const baseDir = outputDir || resolve(__dirname, '../outputs');

@@ -16,6 +16,11 @@
 > orquestrador injeta no user prompt a instrução pra emitir **também um objeto `slide3`**
 > (SOLUÇÃO — pitch do PRADEX, template `slide_solucao.py`), FORA do array `slides` (que segue
 > com 2). Quando não é puxada, `slide3` não existe. O schema do slide3 vai no próprio user prompt.
+>
+> **Deixa do PRADEX na caption (2026-06-18):** ~1 a cada 3 capítulos (flag `incluirCta` do
+> `run-completo`, = `chapterNumber % 3 === 0` e **só quando NÃO é puxada**), o user prompt pede
+> pra terminar a CAPTION com **uma deixa curta** divulgando o PRADEX (link na bio). A deixa entra
+> só na string da caption — NUNCA nos slides. Não acumula com o slide3 (puxada não recebe deixa).
 
 ---
 

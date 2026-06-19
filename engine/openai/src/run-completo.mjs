@@ -79,9 +79,13 @@ async function gerar() {
   const chapterNumber = estado.capitulo_offset + idx;
   const chapterTotal = estado.total_capitulos;
   const puxada = topic.puxada === true;
+  // Deixa do PRADEX na caption ~1 a cada 3 capítulos. Nunca junto da puxada (o slide3
+  // já carrega o pitch) — evita pitch dobrado.
+  const incluirCta = !puxada && chapterNumber % 3 === 0;
   console.log(
     `[run] tema #${idx}: "${topic.tema}" (ângulo=${topic.angulo}) — CAP. ${chapterNumber}/${chapterTotal}` +
-      (puxada ? ' [PUXADA → 3 slides]' : ' [2 slides]')
+      (puxada ? ' [PUXADA → 3 slides]' : ' [2 slides]') +
+      (incluirCta ? ' [+deixa PRADEX na caption]' : '')
   );
 
   // gerarCarrossel → PNGs (artifact). Puxada gera 3 slides (o 3º = solução PRADEX).
@@ -91,6 +95,7 @@ async function gerar() {
     chapterNumber,
     chapterTotal,
     puxada,
+    incluirCta,
   });
   console.log(`[run] carrossel pronto em ${r.outputDir} (${r.slidePaths.length} slides)`);
 
