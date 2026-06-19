@@ -11,6 +11,11 @@
 > O número do capítulo (`cap_num`, `numero_grande`) e o `texto_meta` são **injetados pelo orquestrador** depois do parse — você NÃO precisa preencher esses campos, deixe como placeholder `"{{CAP}}"`.
 >
 > A chamada usa `response_format: { type: 'json_object' }` pra garantir parse sem retry.
+>
+> **Posts-puxada (2026-06-18):** em capítulos marcados `puxada` (flag em `data/temas.json`), o
+> orquestrador injeta no user prompt a instrução pra emitir **também um objeto `slide3`**
+> (SOLUÇÃO — pitch do PRADEX, template `slide_solucao.py`), FORA do array `slides` (que segue
+> com 2). Quando não é puxada, `slide3` não existe. O schema do slide3 vai no próprio user prompt.
 
 ---
 
@@ -66,7 +71,7 @@ APENAS JSON válido, sem markdown, sem comentário fora do JSON, com este shape 
   ]
 }
 
-Exatamente 2 slides (não 1, não 3). Sempre o slide 1 é `tipo: "tensao"` e o slide 2 é `tipo: "resolucao"`.
+O array `slides` tem SEMPRE exatamente 2 itens: slide 1 `tipo: "tensao"`, slide 2 `tipo: "resolucao"`. (Em posts-puxada, um objeto `slide3` SEPARADO é pedido explicitamente no user prompt — ele não entra no array `slides`.)
 
 # REGRAS DO SLIDE 1 (TENSÃO — capa de capítulo)
 
@@ -158,7 +163,7 @@ A frase central do slide 2 (campo `titulo`) usa 1 destes padrões:
 
 # RESTRIÇÕES ABSOLUTAS (não fazer)
 
-- NUNCA mais de 2 slides.
+- NUNCA mais de 2 itens no array `slides` (o `slide3` de puxada é objeto separado, só quando o user prompt pedir).
 - NUNCA recomendar ativo, fundo, ação, cripto, produto específico.
 - NUNCA prometer retorno ou rentabilidade.
 - NUNCA "te ensino" / "te conto" / "te mostro".

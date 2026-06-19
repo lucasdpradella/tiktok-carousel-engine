@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { gerarRoteiro } from './gerar-roteiro.mjs';
 import { renderSlide1 } from './render-slide-1.mjs';
 import { renderSlide2 } from './render-slide-2.mjs';
+import { renderSlide3 } from './render-slide-3.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -40,15 +41,18 @@ export async function gerarCarrossel({
   outputDir,
   chapterNumber = 4,
   chapterTotal = 8,
+  puxada = false,
   pythonBin = process.env.OPENAI_PYTHON_BIN || 'python3',
 } = {}) {
   if (!topico) {
     throw new Error('[gerar-carrossel] opts.topico obrigatorio');
   }
 
-  console.log(`[carrossel] gerando roteiro para: "${topico}" (CAP. ${chapterNumber})`);
+  console.log(
+    `[carrossel] gerando roteiro para: "${topico}" (CAP. ${chapterNumber}${puxada ? ', PUXADA' : ''})`
+  );
   const t0Total = Date.now();
-  const roteiro = await gerarRoteiro({ topico, angulo });
+  const roteiro = await gerarRoteiro({ topico, angulo, puxada });
   console.log(`[carrossel] roteiro pronto. Caption: "${roteiro.caption.slice(0, 80)}..."`);
 
   const baseDir = outputDir || resolve(__dirname, '../outputs');
@@ -62,6 +66,9 @@ export async function gerarCarrossel({
     if (typeof s.texto_meta === 'string') {
       s.texto_meta = s.texto_meta.replaceAll('{{CAP}}', capStr);
     }
+  }
+  if (puxada && roteiro.slide3 && typeof roteiro.slide3.texto_meta === 'string') {
+    roteiro.slide3.texto_meta = roteiro.slide3.texto_meta.replaceAll('{{CAP}}', capStr);
   }
 
   // extras pro slide 1 (capa de capítulo)
@@ -101,6 +108,19 @@ export async function gerarCarrossel({
   });
 
   const slidePaths = await Promise.all(promises);
+
+  // Slide 3 (SOLUÇÃO — pitch PRADEX): só em post-puxada, aditivo aos 2 editoriais.
+  if (puxada && roteiro.slide3) {
+    const slideNum = slidePaths.length + 1; // 3
+    const path = resolve(dir, `slide-${String(slideNum).padStart(2, '0')}.png`);
+    const t0 = Date.now();
+    console.log(`[carrossel] slide ${slideNum} (SOLUÇÃO via template Pradex) — pitch PRADEX`);
+    const r = await renderSlide3({ ...roteiro.slide3, tipo: 'solucao' }, path, pythonBin);
+    console.log(
+      `[carrossel] slide ${slideNum} (SOLUÇÃO) OK (${Math.round((Date.now() - t0) / 1000)}s, ${r.sizeBytes} bytes)`
+    );
+    slidePaths.push(path);
+  }
 
   const roteiroPath = resolve(dir, 'roteiro.json');
   await writeFile(roteiroPath, JSON.stringify(roteiro, null, 2));

@@ -78,18 +78,21 @@ async function gerar() {
   const topic = temas[idx];
   const chapterNumber = estado.capitulo_offset + idx;
   const chapterTotal = estado.total_capitulos;
+  const puxada = topic.puxada === true;
   console.log(
-    `[run] tema #${idx}: "${topic.tema}" (ângulo=${topic.angulo}) — CAP. ${chapterNumber}/${chapterTotal}`
+    `[run] tema #${idx}: "${topic.tema}" (ângulo=${topic.angulo}) — CAP. ${chapterNumber}/${chapterTotal}` +
+      (puxada ? ' [PUXADA → 3 slides]' : ' [2 slides]')
   );
 
-  // gerarCarrossel → PNGs (artifact)
+  // gerarCarrossel → PNGs (artifact). Puxada gera 3 slides (o 3º = solução PRADEX).
   const r = await gerarCarrossel({
     topico: topic.tema,
     angulo: topic.angulo,
     chapterNumber,
     chapterTotal,
+    puxada,
   });
-  console.log(`[run] carrossel pronto em ${r.outputDir}`);
+  console.log(`[run] carrossel pronto em ${r.outputDir} (${r.slidePaths.length} slides)`);
 
   // Converte cada PNG → JPEG (no próprio dir do artifact)
   const jpgPaths = [];
