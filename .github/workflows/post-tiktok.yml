@@ -16,10 +16,10 @@ name: post-tiktok
 #     FASE 2  node src/run-completo.mjs --post  → espera Pages + refresh + content/init + avança estado
 #     (git)   commita/pusha data/estado.json
 #
-#   DRY_RUN=true (default do cron e do dispatch): roda só a FASE 1, gera o artifact
-#   (PNG+JPEG) e NÃO posta/avança. Pra postar de verdade: dispatch com dry_run=false.
-#   Começar testando em dispatch antes de soltar o cron pra postar (cron segue dry-run
-#   até o Lucas trocar o default ou passar dry_run:false).
+#   CRON LIGADO (2026-06-18): o run agendado posta de verdade (DRY_RUN=false) — gera,
+#   publica no Pages e empurra pro inbox dia-sim/dia-não. O workflow_dispatch manual
+#   segue com default dry_run=true (só FASE 1: artifact, sem postar/avançar) pra teste
+#   seguro; passe dry_run=false no dispatch quando quiser postar manualmente.
 
 on:
   schedule:
@@ -57,8 +57,9 @@ jobs:
       TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
-      # Cron sem inputs ⇒ inputs.dry_run vira "" ⇒ fallback 'true'. Dispatch respeita a escolha.
-      DRY_RUN: ${{ inputs.dry_run || 'true' }}
+      # schedule (cron) POSTA de verdade (DRY_RUN=false). workflow_dispatch respeita a escolha
+      # (default 'true' = teste seguro). github.event_name distingue os dois gatilhos.
+      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run || 'true' }}
       OPENAI_PYTHON_BIN: python3
       # Fila de temas + numeração vivem em engine/openai/data/ (temas.json + estado.json).
       # Supabase descomissionado em 2026-06-17; upload-post.com substituído pela
