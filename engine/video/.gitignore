@@ -1,0 +1,7 @@
+# artefatos gerados (regeneráveis) e segredos de voz — NUNCA versionar
+out/
+*.wav
+*.mp3
+# voz: sample e latents EM CLARO nunca vão pro git; só o .gpg cifrado é versionado (§2c)
+voz/*.wav
+voz/*.pth
