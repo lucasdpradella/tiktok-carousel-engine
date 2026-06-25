@@ -17,6 +17,7 @@
 
 const OAUTH_TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
 const CONTENT_INIT_URL = 'https://open.tiktokapis.com/v2/post/publish/content/init/';
+const INBOX_VIDEO_INIT_URL = 'https://open.tiktokapis.com/v2/post/publish/inbox/video/init/';
 const STATUS_FETCH_URL = 'https://open.tiktokapis.com/v2/post/publish/status/fetch/';
 
 const TIKTOK_TITLE_MAX = 90; // UTF-16 runes (caption visível)
@@ -128,6 +129,41 @@ export async function postarTikTokInbox({ photoUrls, title, description, accessT
     );
   }
 
+  return { publishId: json.data?.publish_id, raw: json };
+}
+
+/**
+ * Inicia um VÍDEO no inbox/rascunho via PULL_FROM_URL — scope video.upload (mesmo das fotos).
+ * O TikTok baixa o MP4 da URL pública e notifica o @pradella.lucas, que finaliza no app
+ * (caption + trending sound). Inbox = sem novo audit, mantém o checkpoint humano.
+ *
+ * @param {object} opts
+ * @param {string} opts.videoUrl — URL HTTPS pública do MP4 (domínio com URL prefix verificado, sem redirect)
+ * @param {string} opts.accessToken
+ * @returns {Promise<{ publishId: string, raw: object }>}
+ */
+export async function postarVideoInbox({ videoUrl, accessToken } = {}) {
+  if (typeof videoUrl !== 'string' || !videoUrl.startsWith('https://')) {
+    throw new Error('[postar] postarVideoInbox: videoUrl precisa ser HTTPS pública (sem redirect)');
+  }
+  if (!accessToken) throw new Error('[postar] postarVideoInbox: accessToken ausente');
+
+  const res = await fetch(INBOX_VIDEO_INIT_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: JSON.stringify({ source_info: { source: 'PULL_FROM_URL', video_url: videoUrl } }),
+  });
+  const json = await res.json();
+  const code = json.error?.code;
+  if (!res.ok || code !== 'ok') {
+    throw new Error(
+      `[postar] inbox/video/init falhou (HTTP ${res.status}): code=${code} ` +
+        `msg="${json.error?.message || ''}" log_id=${json.error?.log_id || 'n/a'}`
+    );
+  }
   return { publishId: json.data?.publish_id, raw: json };
 }
 

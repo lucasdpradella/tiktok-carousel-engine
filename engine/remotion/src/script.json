@@ -1,0 +1,88 @@
+{
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "cenas": [
+    {
+      "id": "gancho",
+      "tipo": "gancho",
+      "dur": 110,
+      "narracao": "Seu dinheiro não some. Ele vaza.",
+      "linhas": ["Seu dinheiro", "não some."],
+      "prefixo": "Ele ",
+      "destaque": "VAZA."
+    },
+    {
+      "id": "nemve",
+      "tipo": "frase",
+      "dur": 75,
+      "narracao": "E você nem vê por onde.",
+      "linhas": ["E você nem vê", "por onde."]
+    },
+    {
+      "id": "pequenos",
+      "tipo": "lista",
+      "dur": 165,
+      "narracao": "São os pequenos: o delivery de terça, a assinatura que você esqueceu de cancelar, o cafezinho de todo dia.",
+      "titulo": "São os pequenos:",
+      "itens": [
+        { "icone": "delivery", "linhas": ["o delivery de terça"] },
+        { "icone": "assinatura", "linhas": ["a assinatura que você", "esqueceu de cancelar"] },
+        { "icone": "cafe", "linhas": ["o cafezinho de todo dia"] }
+      ]
+    },
+    {
+      "id": "numero",
+      "tipo": "numero",
+      "dur": 145,
+      "narracao": "Sozinhos, são quinze reais. Juntos, seiscentos reais no fim do mês.",
+      "antes": "Sozinhos: R$ 15.",
+      "rotulo": "Juntos:",
+      "numero": "R$ 600",
+      "depois": "no fim do mês."
+    },
+    {
+      "id": "problema",
+      "tipo": "frase",
+      "dur": 85,
+      "narracao": "O problema não é gastar. É não enxergar.",
+      "linhas": ["O problema não é gastar —", "é não enxergar."]
+    },
+    {
+      "id": "controla",
+      "tipo": "duplo",
+      "dur": 85,
+      "narracao": "Quem anota, controla. Quem controla, sobra.",
+      "linhas": ["Quem anota, controla.", "Quem controla, sobra."]
+    },
+    {
+      "id": "acao",
+      "tipo": "acao",
+      "dur": 80,
+      "narracao": "Começa hoje: anota um gasto. Só um.",
+      "titulo": "Começa hoje:",
+      "prefixo": "anota ",
+      "destaque": "UM",
+      "sufixo": " gasto.",
+      "extra": "Só um."
+    },
+    {
+      "id": "explicador",
+      "tipo": "explicador",
+      "dur": 70,
+      "narracao": "PRADEX é o meu app pra organizar os gastos. De graça.",
+      "destaque": "PRADEX",
+      "resto": ["é o meu app pra", "organizar os gastos —", "de graça."]
+    },
+    {
+      "id": "cta",
+      "tipo": "cta",
+      "dur": 85,
+      "narracao": "Comenta PRADEX que eu te mando o link no direto. E me segue pra não perder.",
+      "prefixo": "Comenta ",
+      "destaque": "PRADEX",
+      "linhas": ["que eu te mando", "o link no direto"],
+      "follow": "e me segue pra não perder."
+    }
+  ]
+}
