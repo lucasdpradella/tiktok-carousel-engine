@@ -1,0 +1,78 @@
+name: voz-ci
+
+# GATE 2 (§4 do briefing-engine-video-auto): prova o XTTS rodando sozinho no Actions.
+# Decifra os speaker latents (Secret VOICE_LATENTS_PASSPHRASE) → gera o roteiro do tema
+# atual → narração por cena (speed 1.5 + EQ de-muffle + loudnorm) → durations.json →
+# sobe tudo como artifact pro Lucas ouvir. NÃO renderiza vídeo, NÃO posta, NÃO toca no
+# carrossel (§0). workflow_dispatch apenas.
+
+on:
+  workflow_dispatch:
+    inputs:
+      indice:
+        description: 'Índice do tema na fila (vazio = estado-video.json.indice_atual)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  voz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      VOICE_LATENTS_PASSPHRASE: ${{ secrets.VOICE_LATENTS_PASSPHRASE }}
+      COQUI_TOS_AGREED: '1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ffmpeg + gnupg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg gnupg
+
+      - name: Cache XTTS-v2 model (~2GB)
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/tts
+          key: xtts-v2-model-v1
+
+      - name: Install Python deps (coqui-tts)
+        run: pip install --upgrade pip && pip install "coqui-tts" "transformers>=4.57,<5"
+
+      - name: Decifrar speaker latents
+        run: |
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "$VOICE_LATENTS_PASSPHRASE" \
+            -o /tmp/speaker_latents.pth \
+            --decrypt engine/video/voz/speaker_latents.pth.gpg
+          test -s /tmp/speaker_latents.pth && echo "latents decifrados ok"
+
+      - name: Gerar roteiro (script.json)
+        run: node engine/video/roteirista-video.mjs ${{ inputs.indice }}
+
+      - name: Gerar narração (XTTS + EQ + loudnorm)
+        run: python engine/video/tts_ci.py engine/video/out/script.json /tmp/speaker_latents.pth engine/video/out/narracao
+
+      - name: Upload artifact (narração + durations + roteiro)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narracao-${{ github.run_id }}
+          path: |
+            engine/video/out/narracao/
+            engine/video/out/script.json
+          if-no-files-found: warn
+          retention-days: 14
