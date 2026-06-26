@@ -1,0 +1,137 @@
+name: post-video
+
+# §2f — engine de vídeo faceless automática (roteiro → voz clonada → render → inbox).
+#
+# ⚠️ CRON DESLIGADO (§0 do briefing-engine-video-auto): o schedule SÓ liga depois do vídeo
+# provado rodando sozinho (Gate 5). Até lá, só workflow_dispatch, e o CARROSSEL segue postando.
+# Quando ligar: descomentar o schedule abaixo (0 11 */2 * * = 8h BRT) E desligar o cron do
+# carrossel (post-tiktok.yml). NÃO fazer isso antes do Gate 5.
+#
+# Modos:
+#   dry_run=true  (default) → GATE 3: gera roteiro + voz + render → sobe o MP4 como artifact. Não posta.
+#   dry_run=false           → GATE 4: + commita o MP4 no Pages, posta no inbox e avança estado-video.json.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (gera MP4, não posta no inbox) — default TRUE'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+  # schedule:
+  #   - cron: '0 11 */2 * *'   # 8h BRT, dia-sim/dia-não — LIGAR só no Gate 5 (e desligar o do carrossel)
+
+concurrency:
+  group: post-video
+  cancel-in-progress: false
+
+permissions:
+  contents: write # só usado no modo real (commit do MP4 em docs/ + estado-video.json)
+
+jobs:
+  video:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      VOICE_LATENTS_PASSPHRASE: ${{ secrets.VOICE_LATENTS_PASSPHRASE }}
+      TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+      TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+      COQUI_TOS_AGREED: '1'
+      VOICE_LATENTS_PTH: /tmp/speaker_latents.pth
+      OPENAI_PYTHON_BIN: python
+      DRY_RUN: ${{ inputs.dry_run || 'true' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ffmpeg + gnupg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg gnupg
+
+      - name: Cache XTTS-v2 model (~2GB)
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/tts
+          key: xtts-v2-model-v1
+
+      - name: Install Python deps (torch 2.8 CPU + coqui-tts)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "torch==2.8.*" "torchaudio==2.8.*" --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install "coqui-tts" "transformers>=4.57,<5"
+          python -c "import torch, torchaudio, TTS; print('deps ok')"
+
+      - name: Install Remotion deps
+        working-directory: engine/remotion
+        run: npm install
+
+      - name: Decifrar speaker latents
+        run: |
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "$VOICE_LATENTS_PASSPHRASE" \
+            -o /tmp/speaker_latents.pth \
+            --decrypt engine/video/voz/speaker_latents.pth.gpg
+          test -s /tmp/speaker_latents.pth && echo "latents ok"
+
+      - name: Gerar vídeo (roteiro -> voz -> render Remotion)
+        run: node engine/video/run-video.mjs
+
+      - name: Upload MP4 + artefatos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-${{ github.run_id }}
+          path: |
+            engine/remotion/out/dinheiro-vaza.mp4
+            engine/video/out/
+          if-no-files-found: warn
+          retention-days: 14
+
+      # ---- abaixo só no modo REAL (Gate 4+). Dry-run para no artifact acima. ----
+      - name: Commit & push MP4 to Pages
+        if: env.DRY_RUN != 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/post-video-*/ || true
+          if git diff --cached --quiet; then
+            echo "nada novo em docs/"
+          else
+            git commit -m "chore(video): publica MP4 faceless (run ${{ github.run_id }})"
+            git push
+          fi
+
+      - name: Post to inbox (phase 2)
+        if: env.DRY_RUN != 'true'
+        run: node engine/video/run-video.mjs --post
+
+      - name: Commit & push estado-video.json
+        if: env.DRY_RUN != 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine/video/estado-video.json
+          if git diff --cached --quiet; then
+            echo "estado-video sem mudança"
+          else
+            git commit -m "chore(video): avanca fila apos post (run ${{ github.run_id }})"
+            git push
+          fi
