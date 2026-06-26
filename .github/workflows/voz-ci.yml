@@ -54,11 +54,12 @@ jobs:
           python --version
           which python
           python -m pip install --upgrade pip
-          # torch CPU primeiro (sem o wheel CUDA gigante) pra o coqui-tts achar o torch já satisfeito
-          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          # torch + torchaudio CPU primeiro (sem o wheel CUDA gigante); o índice cpu casa as versões.
+          # O XTTS (coqui-tts) importa torchaudio, então tem que vir junto.
+          python -m pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
           python -m pip install "coqui-tts" "transformers>=4.57,<5"
           # falha cedo se algo não ficou no mesmo interpretador
-          python -c "import torch, TTS; print('torch', torch.__version__, '| coqui-tts ok')"
+          python -c "import torch, torchaudio, TTS; print('torch', torch.__version__, '| torchaudio', torchaudio.__version__, '| coqui-tts ok')"
 
       - name: Decifrar speaker latents
         run: |
