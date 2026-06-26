@@ -68,7 +68,7 @@ REGRAS DE NARRAÇÃO (campo "narracao" — é o que a voz fala):
 REGRAS DE TEXTO DE TELA:
 - Linhas curtas (<= 16 caracteres) pra caber na tela 9:16. "destaque" = 1 palavra/expressão curta em terracota.
 - "lista": 3 itens, e "icone" SÓ pode ser um de: delivery, assinatura, cafe. Se o tema não combinar com esses ícones, NÃO use "lista" (use frase/numero/duplo).
-- "numero": use quando houver um número de impacto. Os campos de TELA desta cena (antes, numero, depois) DEVEM usar algarismos e R$ (ex: "numero": "R$ 600", "antes": "Sozinhos: R$ 15."). Só a "narracao" escreve por extenso. NUNCA ponha valor por extenso no campo de tela "numero".
+- "numero": use quando houver um número de impacto. Os campos de TELA desta cena (antes, numero, depois) DEVEM usar algarismos e R$. Ex CERTO: "numero": "R$ 600", "antes": "Sozinhos: R$ 15.". Ex ERRADO (PROIBIDO): "numero": "seiscentos reais". O valor por extenso vai SÓ na "narracao", nunca no campo de tela "numero".
 
 Devolva só o JSON do objeto com "cenas". Nada além disso.`;
 
@@ -76,10 +76,10 @@ Devolva só o JSON do objeto com "cenas". Nada além disso.`;
  * Gera o script.json de um vídeo a partir do tema.
  * @returns {Promise<{fps,width,height,cenas:Array}>}
  */
-export async function gerarScriptVideo({ tema, resumo } = {}) {
+async function _gerarUma({ tema, resumo, hint } = {}) {
   if (!tema) throw new Error('[roteirista-video] tema obrigatório');
 
-  const user = `Tema: ${tema}\n${resumo ? `Ângulo/resumo: ${resumo}\n` : ''}\nGere o JSON com "cenas" (7 a 9), seguindo a estrutura e as regras. Saída: só JSON.`;
+  const user = `Tema: ${tema}\n${resumo ? `Ângulo/resumo: ${resumo}\n` : ''}\nGere o JSON com "cenas" (7 a 9), seguindo a estrutura e as regras. Saída: só JSON.${hint ? '\n\nA tentativa anterior foi REJEITADA por: ' + hint + '\nCorrija EXATAMENTE isso e devolva o JSON completo de novo.' : ''}`;
 
   const { text } = await chat({
     model: process.env.OPENAI_TEXT_MODEL || 'gpt-4o-mini',
@@ -141,6 +141,25 @@ export async function gerarScriptVideo({ tema, resumo } = {}) {
   if (!cenas.some((c) => c.tipo === 'explicador')) throw new Error('[roteirista-video] falta a cena "explicador" (PRADEX)');
 
   return { fps: FPS, width: WIDTH, height: HEIGHT, cenas };
+}
+
+/**
+ * Gera o script.json com retry + auto-reparo: se o validador rejeitar, re-pede ao
+ * modelo dizendo EXATAMENTE o que corrigir (não derruba a run por um campo torto).
+ * @returns {Promise<{fps,width,height,cenas:Array}>}
+ */
+export async function gerarScriptVideo({ tema, resumo, maxTentativas = 3 } = {}) {
+  if (!tema) throw new Error('[roteirista-video] tema obrigatório');
+  let lastErr = null;
+  for (let attempt = 1; attempt <= maxTentativas; attempt++) {
+    try {
+      return await _gerarUma({ tema, resumo, hint: lastErr });
+    } catch (e) {
+      lastErr = e.message;
+      console.warn(`[roteirista-video] tentativa ${attempt}/${maxTentativas} rejeitada: ${e.message}`);
+    }
+  }
+  throw new Error(`[roteirista-video] falhou após ${maxTentativas} tentativas. Último erro: ${lastErr}`);
 }
 
 // CLI
