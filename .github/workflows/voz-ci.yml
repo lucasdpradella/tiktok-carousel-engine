@@ -49,8 +49,16 @@ jobs:
           path: ~/.local/share/tts
           key: xtts-v2-model-v1
 
-      - name: Install Python deps (coqui-tts)
-        run: pip install --upgrade pip && pip install "coqui-tts" "transformers>=4.57,<5"
+      - name: Install Python deps (torch CPU + coqui-tts) no MESMO python
+        run: |
+          python --version
+          which python
+          python -m pip install --upgrade pip
+          # torch CPU primeiro (sem o wheel CUDA gigante) pra o coqui-tts achar o torch já satisfeito
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install "coqui-tts" "transformers>=4.57,<5"
+          # falha cedo se algo não ficou no mesmo interpretador
+          python -c "import torch, TTS; print('torch', torch.__version__, '| coqui-tts ok')"
 
       - name: Decifrar speaker latents
         run: |
