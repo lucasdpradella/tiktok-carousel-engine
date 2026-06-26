@@ -54,9 +54,9 @@ jobs:
           python --version
           which python
           python -m pip install --upgrade pip
-          # torch + torchaudio CPU primeiro (sem o wheel CUDA gigante); o índice cpu casa as versões.
-          # O XTTS (coqui-tts) importa torchaudio, então tem que vir junto.
-          python -m pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          # torch + torchaudio CPU, FIXADOS em 2.8.* (< 2.9): a partir do torch 2.9 o coqui-tts
+          # exige a cadeia torchcodec (sensível à versão do ffmpeg do runner). 2.8 evita isso.
+          python -m pip install "torch==2.8.*" "torchaudio==2.8.*" --index-url https://download.pytorch.org/whl/cpu
           python -m pip install "coqui-tts" "transformers>=4.57,<5"
           # falha cedo se algo não ficou no mesmo interpretador
           python -c "import torch, torchaudio, TTS; print('torch', torch.__version__, '| torchaudio', torchaudio.__version__, '| coqui-tts ok')"
