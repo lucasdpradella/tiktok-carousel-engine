@@ -1,9 +1,9 @@
-// theme.ts — marca PRADEX "Manual do Dinheiro" (mesma paleta dos slides de carrossel).
+// theme.ts — rebrand "Lucas Pradella · Assessor" (fundo escuro + marfim + dourado).
 export const C = {
-  bg: '#F0EAE0', // creme quente
-  ink: '#15171C', // grafite quente escuro
-  inkSoft: '#3C4048', // grafite suave
-  accent: '#C04A2B', // terracota / tijolo
+  bg: '#122033', // azul-petróleo escuro
+  ink: '#F7F1E3', // marfim (texto primário sobre o fundo escuro)
+  inkSoft: '#D8CDB0', // marfim suave (texto secundário)
+  accent: '#C2A24E', // dourado
   white: '#FFFFFF',
   sent: '#D4E0C7', // verde suave (não usado aqui, reservado p/ consistência)
 };

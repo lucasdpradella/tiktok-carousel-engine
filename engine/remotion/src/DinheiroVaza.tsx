@@ -48,6 +48,7 @@ const Pop: React.FC<{ delay?: number; children: React.ReactNode }> = ({ delay = 
       style={{
         display: 'inline-block',
         color: C.accent,
+        fontStyle: 'italic',
         transform: `scale(${interpolate(p, [0, 1], [0.4, 1])})`,
         opacity: interpolate(p, [0, 0.4], [0, 1], { extrapolateRight: 'clamp' }),
       }}
@@ -60,7 +61,7 @@ const Pop: React.FC<{ delay?: number; children: React.ReactNode }> = ({ delay = 
 // ── moldura + header de marca (persistem em todas as cenas) ──────────────────
 
 const Frame: React.FC = () => (
-  <div style={{ position: 'absolute', inset: 40, border: '2px solid rgba(21,23,28,0.16)', borderRadius: 2 }} />
+  <div style={{ position: 'absolute', inset: 40, border: '2px solid rgba(194,162,78,0.22)', borderRadius: 2 }} />
 );
 
 const BrandHeader: React.FC = () => (
@@ -78,7 +79,26 @@ const BrandHeader: React.FC = () => (
     <div style={{ fontFamily: SANS, fontWeight: 500, fontSize: 30, letterSpacing: 4, color: C.accent }}>
       MANUAL DO DINHEIRO
     </div>
-    <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 30, letterSpacing: 1, color: C.ink }}>PRADEX</div>
+    <div style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 38, letterSpacing: 1, color: C.accent }}>LP</div>
+  </div>
+);
+
+// assinatura fixa logo acima da zona segura (centralizada)
+const Signature: React.FC = () => (
+  <div
+    style={{
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: H - SAFE_BOTTOM - 70,
+      textAlign: 'center',
+      fontFamily: SANS,
+      fontWeight: 500,
+      fontSize: 30,
+      color: C.inkSoft,
+    }}
+  >
+    Lucas Pradella · Assessor de Investimentos
   </div>
 );
 
@@ -336,6 +356,7 @@ export const DinheiroVaza: React.FC = () => {
       </Series>
       <Frame />
       <BrandHeader />
+      <Signature />
     </AbsoluteFill>
   );
 };
