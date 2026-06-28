@@ -1,6 +1,7 @@
 node_modules/
 out/
 .env
+public/bg/
 
 # áudio: sample de voz (NUNCA versionar) + WAVs de narração (pesados, regeneráveis).
 # durations.json (metadados, ~bytes) FICA versionado — timing.ts importa no build.

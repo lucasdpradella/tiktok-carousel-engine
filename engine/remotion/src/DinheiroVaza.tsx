@@ -10,6 +10,7 @@ import {
   interpolate,
 } from 'remotion';
 import { useBrandFonts } from './fonts';
+import { Background } from './Background';
 import { C, SERIF, SANS, H, SAFE_BOTTOM } from './theme';
 import script from './script.json';
 import { sceneFrames } from './timing';
@@ -343,6 +344,7 @@ export const DinheiroVaza: React.FC = () => {
   useBrandFonts();
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg }}>
+      <Background bg={(script as any).bg} />
       <Series>
         {script.cenas.map((c: any) => {
           const frames = sceneFrames(c.id);
