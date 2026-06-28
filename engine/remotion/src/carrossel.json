@@ -1,0 +1,129 @@
+{
+  "caption": "Montar um orçamento é essencial, mas muitos cometem um erro crítico. Identificar e corrigir isso pode mudar sua relação com o dinheiro. Vamos entender como lidar com isso e melhorar seu planejamento financeiro.",
+  "hashtags": [
+    "orçamento",
+    "finanças",
+    "educacaofinanceira",
+    "pradex",
+    "planejamento"
+  ],
+  "slides": [
+    {
+      "ordem": 1,
+      "beat": "gancho",
+      "titulo": [
+        [
+          "Por que seu",
+          "r"
+        ],
+        [
+          "orçamento não",
+          "i"
+        ]
+      ],
+      "corpo": "sai do papel todo mês?"
+    },
+    {
+      "ordem": 2,
+      "beat": "conceito",
+      "titulo": [
+        [
+          "Erro",
+          "r"
+        ],
+        [
+          "comum.",
+          "i"
+        ]
+      ],
+      "corpo": "Muita gente ignora gastos variáveis."
+    },
+    {
+      "ordem": 3,
+      "beat": "definicao",
+      "titulo": [
+        [
+          "Gastos",
+          "r"
+        ],
+        [
+          "variáveis.",
+          "i"
+        ]
+      ],
+      "corpo": "Despesas que mudam mês a mês, como compras."
+    },
+    {
+      "ordem": 4,
+      "beat": "exemplo",
+      "titulo": [
+        [
+          "Imagine:",
+          "r"
+        ]
+      ],
+      "numero": "R$ 400",
+      "corpo": "Você estima R$ 200, mas gasta R$ 600 em média."
+    },
+    {
+      "ordem": 5,
+      "beat": "porque",
+      "titulo": [
+        [
+          "Desconsiderar",
+          "r"
+        ],
+        [
+          "variáveis",
+          "i"
+        ]
+      ],
+      "corpo": "Leva a surpresas e falta de controle."
+    },
+    {
+      "ordem": 6,
+      "beat": "contraste",
+      "titulo": [
+        [
+          "Com anotações",
+          "r"
+        ],
+        [
+          "x sem.",
+          "i"
+        ]
+      ],
+      "corpo": "Com anotações, você vê a verdade; sem, a frustração."
+    },
+    {
+      "ordem": 7,
+      "beat": "passos",
+      "titulo": [
+        [
+          "Como corrigir",
+          "r"
+        ]
+      ],
+      "passos": [
+        "Liste todos os gastos variáveis",
+        "Revise mensalmente",
+        "Ajuste o orçamento conforme necessário"
+      ]
+    },
+    {
+      "ordem": 8,
+      "beat": "cta",
+      "titulo": [
+        [
+          "Comenta",
+          "r"
+        ],
+        [
+          "PRADEX",
+          "i"
+        ]
+      ],
+      "corpo": "que eu te mando o link no direto. E me segue pra não morrer sem dinheiro."
+    }
+  ]
+}
