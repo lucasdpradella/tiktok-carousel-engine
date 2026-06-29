@@ -33,7 +33,7 @@ Em vez de dizer O QUE FAZER, ENSINE a pensar: o conceito, o porquê, a estrutura
 3. definicao  — DEFINE o conceito em 1 frase simples.
 4. exemplo    — EXEMPLO concreto com NÚMERO ILUSTRATIVO ("imagine que...").
 5. porque     — POR QUE acontece (a causa, o viés, o mecanismo).
-6. contraste  — o CUSTO / CONTRASTE (com vs sem, antes vs depois).
+6. contraste  — explique o MECANISMO/estrutura por trás (ex: "oscilações cambiais pesam mais sem proteção") e o trade-off. NÃO use "sem X você perde": eduque o PORQUÊ, não a necessidade de um ativo.
 7. passos     — 2 a 3 PASSOS práticos (sequência operacional).
 8. cta        — CHAMADA: comentar PRADEX no comentário pra receber o link + assinatura.
 

@@ -90,7 +90,7 @@ Em vez de dizer O QUE FAZER, ENSINE a pensar: o conceito, o porquê, a estrutura
 - exemplo (tipo "numero"): número ILUSTRATIVO ("imagine que..."), falado por extenso na narração.
 - por que (frase): a causa real, o viés ou o mecanismo por trás.
 - aprofunda (frase ou "duplo"): 2ª camada — a consequência de não resolver, ou outro ângulo do porquê.
-- contraste (tipo "duplo"): com vs sem, antes vs depois — nítido.
+- contraste (tipo "duplo"): mostre o MECANISMO/estrutura por trás (ex: "oscilações cambiais pesam mais sem proteção") e o trade-off — NÃO "sem X você perde". Eduque o porquê, não a necessidade de um ativo.
 - passos práticos: 2 a 3 cenas (use "acao" e "frase") com a narração DIZENDO cada micro-passo, concreto e específico (nada de "se organize" genérico — diga O QUE fazer).
 - fecho memorável (frase ou "duplo"): a sacada que a pessoa leva — frase de efeito, conclusão.
 - explicador (tipo "explicador"): PRADEX, o app de organizar os gastos, de graça.
