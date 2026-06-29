@@ -26,7 +26,7 @@ const VIDEO_OUT = resolve(__dirname, 'out');
 const MANIFEST = resolve(VIDEO_OUT, 'carrossel-post.json');
 const CAPTION = resolve(VIDEO_OUT, 'carrossel-caption.txt');
 const ESTADO = resolve(__dirname, 'estado-carrossel.json');
-const TEMAS = resolve(__dirname, 'temas-video.json');
+const TEMAS = resolve(__dirname, 'temas-carrossel.json'); // fila própria (gama Igor), separada do vídeo
 const DOCS = resolve(REPO, 'docs');
 
 const PAGES_BASE = (process.env.PAGES_BASE_URL || 'https://lucasdpradella.github.io/tiktok-carousel-engine').replace(/\/$/, '');
@@ -65,7 +65,8 @@ async function resolverTopico() {
   if (process.env.TOPICO) return process.env.TOPICO;
   if (arg) return arg;
   const temas = await lerJSON(TEMAS);
-  const idx = existsSync(ESTADO) ? (await lerJSON(ESTADO)).indice_atual : 0;
+  const raw = existsSync(ESTADO) ? (await lerJSON(ESTADO)).indice_atual : 0;
+  const idx = ((raw % temas.length) + temas.length) % temas.length; // wrap circular na fila
   return temas[idx]?.tema;
 }
 
