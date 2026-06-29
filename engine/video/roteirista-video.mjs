@@ -32,25 +32,70 @@ function sanitize(t) {
   return t.trim();
 }
 
+// Backstop de compliance — bloqueia a AÇÃO, não o TEMA (recalibrado 2026-06-29, estilo Igor).
+// Rejeita SÓ: recomendação imperativa, promessa de retorno, ou timing/previsão de preço.
+// LIBERA conceito/estrutura (diversificação, descorrelação, dólar como proteção, renda fixa,
+// offshore, vieses), reframe "X não é Y é Z" e raciocínio próprio ("hoje tenho mais em proteção").
+const COMPLIANCE_PROIBIDO = [
+  // recomendação direta / imperativa ao espectador
+  /\binvist[ae]m? em\b/,
+  /\baplique[m]? em\b/,
+  /\bcoloque[m]?\b[^.]{0,20}\bdinheiro\b/,
+  /\bcompre[m]?\b/,
+  /\bvenda[m]? (a[çc][õo]es|d[óo]lar|cripto|bitcoin|fundos?|t[íi]tulos?|seus?|suas?)/,
+  /\brecomendo\b/,
+  // promessa de retorno garantido
+  /\b(retorno|rentabilidade|lucro|ganho)s?\b[^.]{0,18}garantid/,
+  /garantid\w*[^.]{0,18}(retorno|rentabilidade|lucro|por cento|%|\d)/,
+  /\blucro certo\b/,
+  /\brende\w*[^.]{0,12}garantid/,
+  // timing / previsão de preço
+  /\b(vai|vão) (subir|cair|disparar|despencar|explodir|desabar)\b/,
+  /\bhora de (comprar|vender|investir|entrar|sair)\b/,
+  /\bagora é a hora\b/,
+  /\b(d[óo]lar|bolsa|ibovespa|bitcoin|a[çc][õo]es)\b[^.]{0,15}\bvai (pra|para|a|chegar|bater|virar)\b/,
+];
+function _textoCena(c) {
+  const p = [c.narracao, c.titulo, c.corpo, c.antes, c.numero, c.depois, c.rotulo, c.prefixo, c.destaque, c.sufixo, c.extra, c.follow];
+  if (Array.isArray(c.linhas)) p.push(c.linhas.join(' '));
+  if (Array.isArray(c.resto)) p.push(c.resto.join(' '));
+  if (Array.isArray(c.itens)) for (const it of c.itens) if (Array.isArray(it.linhas)) p.push(it.linhas.join(' '));
+  return p.filter(Boolean).join(' ');
+}
+function checarCompliance(c, id) {
+  const txt = _textoCena(c).toLowerCase();
+  for (const re of COMPLIANCE_PROIBIDO) {
+    const m = txt.match(re);
+    if (m) {
+      throw new Error(`cena ${id}: AÇÃO proibida ("${m[0]}") na narração/tela — recomendação direta, promessa de retorno ou timing. Pode discutir o conceito, a estrutura e reframar, mas NÃO mande comprar/vender/aplicar, não prometa retorno e não preveja preço.`);
+    }
+  }
+}
+
 const SYSTEM = `Você é o roteirista do PRADEX (série "Manual do Dinheiro" em VÍDEO faceless, 9:16, ~30s, voz clonada do Lucas Pradella, assessor de investimentos). Cada vídeo é uma MINI-AULA: a pessoa entende um conceito e sai sabendo o que fazer. Tom de planejador sério e humano, anti-influencer (sem "galera", "bora", "PARE TUDO").
 
-# COMPLIANCE (trava dura — nunca furar)
-🟢 PODE: educação, comportamento, organização, planejamento e conceitos GERAIS (juros, inflação, reserva, orçamento, diversificação como ideia, vieses).
-🟡 CUIDADO: todo número é ILUSTRATIVO, sempre enquadrado ("imagine", "suponha", "digamos"). Classe de ativo só em geral (ex: renda fixa, ações), NUNCA um ticker/fundo específico. Zero promessa de retorno (proibido "rende X", "dobra seu dinheiro").
-🔴 NUNCA: recomendação de compra/venda, alocação ("coloque X% em"), timing ("agora é a hora"), ativo específico. Ensine a PENSAR e a ORGANIZAR, nunca diga o que comprar.
+# COMPLIANCE — bloqueia a AÇÃO, não o TEMA (estilo Igor: educar e estruturar, nunca recomendar)
+🟢 PODE discutir QUALQUER conceito de forma educativa/estrutural: comportamento, planejamento E investimento como CONCEITO — diversificação, descorrelação, dólar como proteção, renda fixa, offshore como diversificação, vieses, juros compostos, inflação, fundos de pensão. Pode REFRAMAR ("X não é Y, é Z"), ensinar o PORQUÊ e a ESTRUTURA, mostrar o trade-off, e usar o SEU PRÓPRIO raciocínio como ILUSTRAÇÃO educativa ("hoje eu tenho mais em proteção porque o cenário pede..."). Números sempre ILUSTRATIVOS ("imagine que...").
+🔴 NUNCA a AÇÃO (é só isso que é proibido):
+  - Recomendação direta/imperativa ao espectador: "invista em X", "compre/venda [ativo]", "aplique em", "coloque seu dinheiro em", "recomendo [ativo]".
+  - Promessa de retorno: "rentabilidade/retorno garantido", "rende X% garantido", "lucro certo".
+  - Timing/previsão de preço: "vai subir/cair", "agora é a hora de comprar/vender", "o dólar vai pra R$ X".
+Em vez de dizer O QUE FAZER, ENSINE a pensar: o conceito, o porquê, a estrutura, o trade-off. Compartilhar o próprio raciocínio é OK como exemplo; mandar o espectador comprar/vender/aplicar NÃO. No contraste e no fecho, reframe e ensine — pode contrastar conceitos (aposta vs estrutura, enxergar vs não enxergar), mas nunca vire recomendação, promessa ou timing.
 
-# ESTRUTURA DIDÁTICA — 8 beats em 9 cenas, NESTA ordem
-1. gancho     (tipo "gancho")     — situação COTIDIANA que a pessoa reconhece. 3s.
-2. frase                          — NOMEIA o conceito E CRAVA a aposta: diga o que ignorar isso CUSTA (ex: "e isso custa mais caro do que você imagina"). Não basta nomear.
-3. frase                          — DEFINE o conceito em 1 frase simples.
-4. numero     (tipo "numero")     — EXEMPLO concreto com NÚMERO ILUSTRATIVO ("imagine que...").
-5. frase                          — POR QUE acontece (a causa, o viés, o mecanismo).
-6. duplo      (tipo "duplo")      — o CUSTO / CONTRASTE (com vs sem, antes vs depois).
-7. acao       (tipo "acao")       — os PASSOS práticos: a narração DEVE dar 2 a 3 micro-passos concretos (não só um); a tela mostra o passo principal.
-8. explicador (tipo "explicador") — PRADEX, o app de organizar os gastos, de graça.
-9. cta        (tipo "cta")        — CTA comment-to-DM (a assinatura "Lucas Pradella · Assessor" já aparece fixa na tela).
+# ESTRUTURA DIDÁTICA — mini-aula RICA em 10 a 12 cenas (1 ideia por cena), nesta ordem:
+- gancho (tipo "gancho"): situação COTIDIANA reconhecível OU um REFRAME no formato "X não é Y, é Z" (ex: "Dólar não é aposta, é estrutura"). 3s.
+- nomeia + aposta (frase): nomeia o conceito E crava o que ignorar isso CUSTA.
+- define (frase): o conceito em 1 frase simples e clara.
+- exemplo (tipo "numero"): número ILUSTRATIVO ("imagine que..."), falado por extenso na narração.
+- por que (frase): a causa real, o viés ou o mecanismo por trás.
+- aprofunda (frase ou "duplo"): 2ª camada — a consequência de não resolver, ou outro ângulo do porquê.
+- contraste (tipo "duplo"): com vs sem, antes vs depois — nítido.
+- passos práticos: 2 a 3 cenas (use "acao" e "frase") com a narração DIZENDO cada micro-passo, concreto e específico (nada de "se organize" genérico — diga O QUE fazer).
+- fecho memorável (frase ou "duplo"): a sacada que a pessoa leva — frase de efeito, conclusão.
+- explicador (tipo "explicador"): PRADEX, o app de organizar os gastos, de graça.
+- cta (tipo "cta"): comment-to-DM (a assinatura "Lucas Pradella · Assessor" já aparece fixa na tela).
 
-SUBSTÂNCIA é o ponto desta versão: preencha cada cena com CONTEÚDO real (o exemplo com número, o porquê, o passo). Nada de gancho vazio repetido — cada cena entrega 1 ideia que AVANÇA a aula.
+PROFUNDIDADE estilo aula-que-ensina-de-verdade: substância REAL em CADA cena (o número, o porquê, a 2ª camada, os passos ditos, o fecho). Cada cena AVANÇA o ensino — nada de gancho vazio repetido nem encher linguiça. Total 10 a 12 cenas.
 
 # OUTPUT — APENAS JSON (sem markdown) com este shape EXATO:
 
@@ -61,8 +106,11 @@ SUBSTÂNCIA é o ponto desta versão: preencha cada cena com CONTEÚDO real (o e
     { "id":"define", "tipo":"frase", "narracao":"É todo gasto pequeno e repetido que você nem registra.", "linhas":["Pequeno e","repetido."] },
     { "id":"exemplo", "tipo":"numero", "narracao":"Imagine tres gastinhos de quinze reais por dia, no mês viram seiscentos reais.", "antes":"3x R$ 15 / dia", "rotulo":"No mês:", "numero":"R$ 600", "depois":"sem você ver." },
     { "id":"porque", "tipo":"frase", "narracao":"Acontece porque o cérebro ignora valor pequeno e repetido.", "linhas":["O pequeno","engana."] },
+    { "id":"aprofunda", "tipo":"frase", "narracao":"Sem perceber, esse vazamento vira um rombo fixo todo mês.", "linhas":["Vira rombo","todo mês."] },
     { "id":"contraste", "tipo":"duplo", "narracao":"Quem não anota perde a noção, quem anota recupera o controle.", "linhas":["Sem anotar, some.","Anotando, sobra."] },
-    { "id":"passo", "tipo":"acao", "narracao":"Comece simples, anote um gasto por dia durante uma semana.", "titulo":"Comece por:", "prefixo":"anota ", "destaque":"1 gasto", "sufixo":" por dia", "extra":"por uma semana." },
+    { "id":"passo", "tipo":"acao", "narracao":"O primeiro passo é anotar um gasto por dia durante uma semana.", "titulo":"Passo 1:", "prefixo":"anota ", "destaque":"1 gasto", "sufixo":" por dia", "extra":"por uma semana." },
+    { "id":"passo2", "tipo":"frase", "narracao":"No fim da semana, some os gastos por categoria e veja onde escapa.", "linhas":["Some por","categoria."] },
+    { "id":"fecho", "tipo":"duplo", "narracao":"Você não precisa ganhar mais, precisa enxergar melhor.", "linhas":["Não é ganhar mais.","É enxergar melhor."] },
     { "id":"pradex", "tipo":"explicador", "narracao":"No PRADEX você registra pelo WhatsApp e vê tudo organizado, de graça.", "destaque":"PRADEX", "resto":["organiza seus gastos","pelo WhatsApp,","de graça."] },
     { "id":"cta", "tipo":"cta", "narracao":"Comenta PRADEX que eu te mando o link no direto.", "prefixo":"Comenta ", "destaque":"PRADEX", "linhas":["que eu te mando","o link no direto"], "follow":"e me segue pra não morrer sem dinheiro." }
   ]
@@ -83,7 +131,7 @@ SUBSTÂNCIA é o ponto desta versão: preencha cada cena com CONTEÚDO real (o e
 - "explicador": SEMPRE destaque "PRADEX" + resto curto (app de organizar gastos, de graça).
 - "cta": SEMPRE prefixo "Comenta ", destaque "PRADEX", follow EXATAMENTE "e me segue pra não morrer sem dinheiro."
 
-Devolva só o JSON do objeto com "cenas" (ideal 9; aceito 7 a 9). Nada além disso.`;
+Devolva só o JSON do objeto com "cenas" (ideal 10 a 12; mínimo 7). Nada além disso.`;
 
 /**
  * Gera o script.json de um vídeo a partir do tema.
@@ -92,7 +140,7 @@ Devolva só o JSON do objeto com "cenas" (ideal 9; aceito 7 a 9). Nada além dis
 async function _gerarUma({ tema, resumo, hint } = {}) {
   if (!tema) throw new Error('[roteirista-video] tema obrigatório');
 
-  const user = `Tema: ${tema}\n${resumo ? `Ângulo/resumo: ${resumo}\n` : ''}\nGere o JSON com "cenas" (7 a 9), seguindo a estrutura e as regras. Saída: só JSON.${hint ? '\n\nA tentativa anterior foi REJEITADA por: ' + hint + '\nCorrija EXATAMENTE isso e devolva o JSON completo de novo.' : ''}`;
+  const user = `Tema: ${tema}\n${resumo ? `Ângulo/resumo: ${resumo}\n` : ''}\nGere o JSON com "cenas" (10 a 12, mini-aula rica), seguindo a estrutura e as regras. Saída: só JSON.${hint ? '\n\nA tentativa anterior foi REJEITADA por: ' + hint + '\nCorrija EXATAMENTE isso e devolva o JSON completo de novo.' : ''}`;
 
   const { text } = await chat({
     model: process.env.OPENAI_TEXT_MODEL || 'gpt-4o-mini',
@@ -111,8 +159,8 @@ async function _gerarUma({ tema, resumo, hint } = {}) {
     throw new Error(`[roteirista-video] JSON inválido do modelo: ${e.message}`);
   }
   const cenas = parsed.cenas;
-  if (!Array.isArray(cenas) || cenas.length < 7 || cenas.length > 9) {
-    throw new Error(`[roteirista-video] esperava 7-9 cenas, recebi ${cenas?.length}`);
+  if (!Array.isArray(cenas) || cenas.length < 7 || cenas.length > 12) {
+    throw new Error(`[roteirista-video] esperava 10-12 cenas (mín 7), recebi ${cenas?.length}`);
   }
 
   const ids = new Set();
@@ -146,6 +194,8 @@ async function _gerarUma({ tema, resumo, hint } = {}) {
         if (!Array.isArray(it.linhas) || !it.linhas.length) throw new Error(`[roteirista-video] ${id}: item sem linhas`);
       }
     }
+    // backstop de compliance: bloqueia recomendação de investimento → retry re-pede
+    checarCompliance(c, id);
   });
 
   // âncoras de estrutura

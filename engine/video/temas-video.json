@@ -1,17 +1,95 @@
 [
-  { "tema": "Seu dinheiro não some, ele vaza", "resumo": "Gastos pequenos invisíveis (delivery, assinatura, cafezinho) que somam no mês. Gancho do vazamento.", "piloto": true },
-  { "tema": "Por que você termina o mês no zero (mesmo ganhando bem)", "resumo": "Não é quanto entra, é a falta de visão do que sai. Hábito de enxergar." },
-  { "tema": "Anota 1 gasto por dia, o hábito que muda tudo", "resumo": "Micro-hábito de registro. Constância vale mais que planilha perfeita." },
-  { "tema": "A conta que você esquece todo mês", "resumo": "Assinaturas e recorrências esquecidas. Auditar o extrato." },
-  { "tema": "O erro número 1 ao montar o orçamento", "resumo": "Orçamento irreal e apertado demais que ninguém segue. Orçar o real, não o ideal." },
-  { "tema": "Os 4 números que você devia saber de cor", "resumo": "Renda, gasto fixo, gasto variável, sobra. Clareza antes de qualquer meta." },
-  { "tema": "A regra das 24 horas contra a compra por impulso", "resumo": "Esperar um dia antes de comprar o que não é essencial. Comportamento." },
-  { "tema": "Cortar o cafezinho não resolve, e o que resolve", "resumo": "Foco nos gastos grandes e recorrentes, não no micro-sacrifício. Desmonta o clichê." },
-  { "tema": "Reserva de emergência: o erro de deixar junto com o resto", "resumo": "Separar a reserva da conta do dia a dia. Organização, não onde investir." },
-  { "tema": "O salário caiu: os primeiros 5 minutos", "resumo": "Ritual de início de mês. Separar fixo, reserva e sobra antes de gastar." },
-  { "tema": "Boleto, cartão, pix: por que você perde a noção", "resumo": "Múltiplos meios de pagamento escondem o total. Centralizar a visão." },
-  { "tema": "Planejar não é controlar cada centavo", "resumo": "Desmistifica o planejamento como sofrimento. É clareza e direção, não prisão." },
-  { "tema": "A pergunta que você devia fazer antes de cada compra", "resumo": "Isso me aproxima ou me afasta do que eu quero? Decisão consciente." },
-  { "tema": "Como saber se você pode gastar nisso sem culpa", "resumo": "Gasto planejado versus impulso. Permissão com critério." },
-  { "tema": "O mês tem 3 semanas de salário e 1 de sobrevivência?", "resumo": "Distribuir o dinheiro ao longo do mês em vez de queimar no começo." }
+  {
+    "tema": "Seu dinheiro não some, ele vaza",
+    "resumo": "Gastos pequenos invisíveis (delivery, assinatura, cafezinho) que somam no mês. Gancho do vazamento.",
+    "piloto": true
+  },
+  {
+    "tema": "Por que você termina o mês no zero (mesmo ganhando bem)",
+    "resumo": "Não é quanto entra, é a falta de visão do que sai. Hábito de enxergar."
+  },
+  {
+    "tema": "Anota 1 gasto por dia, o hábito que muda tudo",
+    "resumo": "Micro-hábito de registro. Constância vale mais que planilha perfeita."
+  },
+  {
+    "tema": "A conta que você esquece todo mês",
+    "resumo": "Assinaturas e recorrências esquecidas. Auditar o extrato."
+  },
+  {
+    "tema": "O erro número 1 ao montar o orçamento",
+    "resumo": "Orçamento irreal e apertado demais que ninguém segue. Orçar o real, não o ideal."
+  },
+  {
+    "tema": "Os 4 números que você devia saber de cor",
+    "resumo": "Renda, gasto fixo, gasto variável, sobra. Clareza antes de qualquer meta."
+  },
+  {
+    "tema": "A regra das 24 horas contra a compra por impulso",
+    "resumo": "Esperar um dia antes de comprar o que não é essencial. Comportamento."
+  },
+  {
+    "tema": "Cortar o cafezinho não resolve, e o que resolve",
+    "resumo": "Foco nos gastos grandes e recorrentes, não no micro-sacrifício. Desmonta o clichê."
+  },
+  {
+    "tema": "Reserva de emergência: o erro de deixar junto com o resto",
+    "resumo": "Separar a reserva da conta do dia a dia. Organização, não onde investir."
+  },
+  {
+    "tema": "O salário caiu: os primeiros 5 minutos",
+    "resumo": "Ritual de início de mês. Separar fixo, reserva e sobra antes de gastar."
+  },
+  {
+    "tema": "Boleto, cartão, pix: por que você perde a noção",
+    "resumo": "Múltiplos meios de pagamento escondem o total. Centralizar a visão."
+  },
+  {
+    "tema": "Planejar não é controlar cada centavo",
+    "resumo": "Desmistifica o planejamento como sofrimento. É clareza e direção, não prisão."
+  },
+  {
+    "tema": "A pergunta que você devia fazer antes de cada compra",
+    "resumo": "Isso me aproxima ou me afasta do que eu quero? Decisão consciente."
+  },
+  {
+    "tema": "Como saber se você pode gastar nisso sem culpa",
+    "resumo": "Gasto planejado versus impulso. Permissão com critério."
+  },
+  {
+    "tema": "O mês tem 3 semanas de salário e 1 de sobrevivência?",
+    "resumo": "Distribuir o dinheiro ao longo do mês em vez de queimar no começo."
+  },
+  {
+    "tema": "Dólar não é aposta, é estrutura",
+    "resumo": "Dólar como proteção e descorrelação do patrimônio, não palpite de timing. Estrutura, não aposta."
+  },
+  {
+    "tema": "Plano de saúde é patrimônio negativo em formação",
+    "resumo": "Reframe: custo crescente de saúde é passivo futuro a planejar, não despesa solta."
+  },
+  {
+    "tema": "Diversificação não é ter muitos produtos",
+    "resumo": "Diversificar é descorrelação (riscos diferentes), não acumular produtos parecidos."
+  },
+  {
+    "tema": "O que copiar dos fundos de pensão",
+    "resumo": "Disciplina, horizonte longo e alocação estrutural dos grandes fundos — o comportamento, não os ativos."
+  },
+  {
+    "tema": "Você não perde pelo ativo errado, perde pelo seu cérebro",
+    "resumo": "Vieses (pânico, euforia, recência) custam mais que a escolha do ativo. Comportamento."
+  },
+  {
+    "tema": "Renda fixa não é sem risco",
+    "resumo": "Reframe: inflação, crédito e liquidez são riscos da renda fixa. Entender o risco, não fugir dele."
+  },
+  {
+    "tema": "Offshore não é evasão, é diversificação",
+    "resumo": "Diversificação de jurisdição como estrutura legítima, não sonegação."
+  },
+  {
+    "tema": "Reserva não é onde investir, é como organizar",
+    "resumo": "Reserva é função (liquidez e segurança) e organização, não a escolha do produto."
+  }
 ]

@@ -14,6 +14,7 @@ import { spawn } from 'node:child_process';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gerarScriptVideo } from './roteirista-video.mjs';
+import { sanitizeNarracao } from './sanitize-narracao.mjs';
 import { refreshAccessToken, postarVideoInbox, getPostStatus } from '../openai/src/postar.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -75,6 +76,9 @@ async function gerar() {
 
   // 1. roteiro → script.json (onde o Remotion lê) + cópia pro artifact
   const script = await gerarScriptVideo({ tema: t.tema, resumo: t.resumo });
+  // sanitiza a NARRAÇÃO por código antes do TTS (XTTS não pode ler símbolo/número solto).
+  // A TELA usa outros campos (linhas/titulo/numero) — não é afetada.
+  for (const c of script.cenas) c.narracao = sanitizeNarracao(c.narracao);
   await mkdir(dirname(REMO_SCRIPT), { recursive: true });
   await writeFile(REMO_SCRIPT, JSON.stringify(script, null, 2) + '\n');
   await mkdir(VIDEO_OUT, { recursive: true });
