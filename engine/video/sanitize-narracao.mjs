@@ -68,19 +68,20 @@ export function sanitizeNarracao(text) {
   t = t.replace(/(\d+(?:\.\d+)*)\s*%/g, (_, d) => ' ' + numeroPorExtenso(parseInt(d.replace(/\./g, ''), 10)) + ' por cento ');
   // 3. qualquer número que sobrou -> por extenso
   t = t.replace(/\d+(?:\.\d+)*/g, (d) => ' ' + numeroPorExtenso(parseInt(String(d).replace(/\./g, ''), 10)) + ' ');
-  // 4. reticências e terminadores (? !) -> ponto final
-  t = t.replace(/…|\.{2,}/g, '.');
-  t = t.replace(/[?!]+/g, '.');
-  // 5. símbolos de pausa (— – · : ;) viram vírgula; o resto some no whitelist abaixo
+  // 4. reticências e terminadores (? !) viram vírgula (o XTTS-v2 PT fala "." como "ponto")
+  t = t.replace(/…|\.{2,}/g, ', ');
+  t = t.replace(/[?!]+/g, ', ');
+  // 5. símbolos de pausa (— – · : ;) viram vírgula
   t = t.replace(/\s*[—–·:;]+\s*/g, ', ');
-  // 6. whitelist final: só letras (com acento), espaço, vírgula e ponto
-  t = t.replace(/[^A-Za-zÀ-ÿ ,.]/g, ' ');
-  // 7. arruma espaços e pontuação
-  t = t.replace(/\s+([,.])/g, '$1');
+  // 6. PONTOS internos viram vírgula (narração fluida, sem ponto seco que o TTS verbaliza)
+  t = t.replace(/\./g, ', ');
+  // 7. whitelist final: SÓ letras (com acento), espaço e vírgula — sem ponto, sem símbolo
+  t = t.replace(/[^A-Za-zÀ-ÿ ,]/g, ' ');
+  // 8. arruma espaços e vírgulas duplicadas
+  t = t.replace(/\s+,/g, ',');
   t = t.replace(/,(\s*,)+/g, ',');
-  t = t.replace(/\.(\s*\.)+/g, '.');
-  t = t.replace(/,\s*\./g, '.');
   t = t.replace(/\s{2,}/g, ' ').trim();
-  t = t.replace(/^[,.\s]+/, '');
+  // 9. remove vírgula/espaço soltos do começo e do FIM (sem ponto/vírgula final)
+  t = t.replace(/^[,\s]+/, '').replace(/[,\s]+$/, '');
   return t;
 }
