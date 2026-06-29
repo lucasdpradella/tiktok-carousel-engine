@@ -22,8 +22,11 @@ name: post-tiktok
 #   seguro; passe dry_run=false no dispatch quando quiser postar manualmente.
 
 on:
-  schedule:
-    - cron: '0 11 */2 * *'
+  # CRON DESLIGADO (2026-06-29, virada §0): o PIL de 2 slides foi SUBSTITUÍDO pelo carrossel
+  # multi-slide (post-carrossel.yml) + vídeo (post-video.yml), que postam em dias alternados.
+  # Mantido só como workflow_dispatch manual (rede de segurança). NÃO religar o schedule.
+  # schedule:
+  #   - cron: '0 11 */2 * *'
   workflow_dispatch:
     inputs:
       dry_run:

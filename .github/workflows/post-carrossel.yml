@@ -27,8 +27,8 @@ on:
         required: false
         default: ''
         type: string
-  # schedule:
-  #   - cron: '0 11 */2 * *'   # 8h BRT, dia-sim/dia-não — LIGAR só após provar (e desligar o cron do PIL)
+  schedule:
+    - cron: '0 11 3,7,11,15,19,23,27,31 * *'   # 8h BRT — carrossel em dias alternados com o vídeo (§0 virado)
 
 concurrency:
   group: post-carrossel
@@ -46,7 +46,7 @@ jobs:
       TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
-      DRY_RUN: ${{ inputs.dry_run || 'true' }}
+      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run || 'true' }}
       TOPICO: ${{ inputs.topico }}
 
     steps:

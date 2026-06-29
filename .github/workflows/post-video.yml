@@ -22,8 +22,8 @@ on:
         options:
           - 'true'
           - 'false'
-  # schedule:
-  #   - cron: '0 11 */2 * *'   # 8h BRT, dia-sim/dia-não — LIGAR só no Gate 5 (e desligar o do carrossel)
+  schedule:
+    - cron: '0 11 1,5,9,13,17,21,25,29 * *'   # 8h BRT — vídeo em dias alternados com o carrossel (§0 virado)
 
 concurrency:
   group: post-video
@@ -45,7 +45,7 @@ jobs:
       COQUI_TOS_AGREED: '1'
       VOICE_LATENTS_PTH: /tmp/speaker_latents.pth
       OPENAI_PYTHON_BIN: python
-      DRY_RUN: ${{ inputs.dry_run || 'true' }}
+      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run || 'true' }}
 
     steps:
       - name: Checkout
