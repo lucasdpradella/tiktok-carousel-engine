@@ -81,6 +81,7 @@ const SYSTEM = `Você é o roteirista do PRADEX (série "Manual do Dinheiro" em 
   - Promessa de retorno: "rentabilidade/retorno garantido", "rende X% garantido", "lucro certo".
   - Timing/previsão de preço: "vai subir/cair", "agora é a hora de comprar/vender", "o dólar vai pra R$ X".
 Em vez de dizer O QUE FAZER, ENSINE a pensar: o conceito, o porquê, a estrutura, o trade-off. Compartilhar o próprio raciocínio é OK como exemplo; mandar o espectador comprar/vender/aplicar NÃO. No contraste e no fecho, reframe e ensine — pode contrastar conceitos (aposta vs estrutura, enxergar vs não enxergar), mas nunca vire recomendação, promessa ou timing.
+⚠️ Ao falar de PROTEÇÃO/ESTRUTURA (dólar, diversificação, offshore), conecte a RISCOS específicos (câmbio, risco Brasil/fiscal, inflação, concentração) e ensine o PORQUÊ. NUNCA prometa que algo "mantém o valor", que "o patrimônio se mantém", nem qualquer ganho — é garantia implícita e PROIBIDO. Use hedge ("pode", "tende a", "historicamente") e foque no mecanismo e no trade-off, não no resultado.
 
 # ESTRUTURA DIDÁTICA — mini-aula RICA em 10 a 12 cenas (1 ideia por cena), nesta ordem:
 - gancho (tipo "gancho"): situação COTIDIANA reconhecível OU um REFRAME no formato "X não é Y, é Z" (ex: "Dólar não é aposta, é estrutura"). 3s.
@@ -202,6 +203,17 @@ async function _gerarUma({ tema, resumo, hint } = {}) {
   if (cenas[0].tipo !== 'gancho') throw new Error('[roteirista-video] primeira cena precisa ser "gancho"');
   if (cenas[cenas.length - 1].tipo !== 'cta') throw new Error('[roteirista-video] última cena precisa ser "cta"');
   if (!cenas.some((c) => c.tipo === 'explicador')) throw new Error('[roteirista-video] falta a cena "explicador" (PRADEX)');
+
+  // CTA TRAVADA de forma DETERMINÍSTICA (tela + narração) — não deixa o modelo variar nem cortar.
+  // As DUAS partes da frase de marca sempre presentes: o convite + o "me segue...".
+  const cta = cenas[cenas.length - 1];
+  cta.tipo = 'cta';
+  cta.prefixo = 'Comenta ';
+  cta.destaque = 'PRADEX';
+  cta.linhas = ['que eu te mando', 'o link no direto'];
+  cta.follow = 'e me segue pra não morrer sem dinheiro.';
+  cta.narracao = 'Comenta PRADEX que eu te mando o link no direto, e me segue pra não morrer sem dinheiro.';
+  cta.dur = DUR_FALLBACK.cta;
 
   return { fps: FPS, width: WIDTH, height: HEIGHT, cenas };
 }
