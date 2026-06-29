@@ -1,0 +1,110 @@
+name: post-carrossel
+
+# Fase C — carrossel DIDÁTICO multi-slide (roteiro Igor → render Remotion N slides → JPEG → inbox FOTO).
+#
+# ⚠️ CRON DESLIGADO (§0): o multi-slide vai SUBSTITUIR o PIL de 2 slides, mas só depois de provado
+# rodando sozinho. Até lá, só workflow_dispatch, e o PIL (post-tiktok.yml) SEGUE postando como rede.
+# Quando ligar: descomentar o schedule abaixo (0 11 */2 * * = 8h BRT) E desligar o cron do PIL em
+# post-tiktok.yml — NÃO antes de o multi-slide cair no inbox e ser aprovado.
+#
+# Modos:
+#   dry_run=true  (default) → GATE: gera roteiro + fundo + render N JPEG → sobe como artifact. Não posta.
+#   dry_run=false           → + commita os JPEGs no Pages, posta no inbox (PHOTO) e avança estado-carrossel.json.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (gera JPEGs, não posta no inbox) — default TRUE'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      topico:
+        description: 'Tópico do carrossel (vazio = usa a fila temas-video.json[estado-carrossel])'
+        required: false
+        default: ''
+        type: string
+  # schedule:
+  #   - cron: '0 11 */2 * *'   # 8h BRT, dia-sim/dia-não — LIGAR só após provar (e desligar o cron do PIL)
+
+concurrency:
+  group: post-carrossel
+  cancel-in-progress: false
+
+permissions:
+  contents: write # só no modo real (commit dos JPEGs em docs/ + estado-carrossel.json)
+
+jobs:
+  carrossel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+      TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+      DRY_RUN: ${{ inputs.dry_run || 'true' }}
+      TOPICO: ${{ inputs.topico }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Remotion deps
+        working-directory: engine/remotion
+        run: npm install
+
+      - name: Gerar carrossel (roteiro -> fundo -> render N JPEG)
+        run: node engine/video/run-carrossel.mjs
+
+      - name: Upload JPEGs + artefatos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: carrossel-${{ github.run_id }}
+          path: |
+            engine/remotion/out/carrossel/
+            engine/video/out/
+          if-no-files-found: warn
+          retention-days: 14
+
+      # ---- abaixo só no modo REAL. Dry-run para no artifact acima. ----
+      - name: Commit & push JPEGs to Pages
+        if: env.DRY_RUN != 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/post-carrossel-*/ || true
+          if git diff --cached --quiet; then
+            echo "nada novo em docs/"
+          else
+            git commit -m "chore(carrossel): publica JPEGs multi-slide (run ${{ github.run_id }})"
+            git push
+          fi
+
+      - name: Post to inbox (phase 2)
+        if: env.DRY_RUN != 'true'
+        run: node engine/video/run-carrossel.mjs --post
+
+      - name: Commit & push estado-carrossel.json
+        if: env.DRY_RUN != 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine/video/estado-carrossel.json
+          if git diff --cached --quiet; then
+            echo "estado-carrossel sem mudança"
+          else
+            git commit -m "chore(carrossel): avanca fila apos post (run ${{ github.run_id }})"
+            git push
+          fi
