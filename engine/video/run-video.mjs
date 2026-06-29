@@ -15,7 +15,19 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gerarScriptVideo } from './roteirista-video.mjs';
 import { sanitizeNarracao } from './sanitize-narracao.mjs';
+import { gerarFundo } from '../openai/src/gerar-fundo.mjs';
 import { refreshAccessToken, postarVideoInbox, getPostStatus } from '../openai/src/postar.mjs';
+
+// colapsa 3+ letras idênticas seguidas -> 2 (typo de TELA, ex "descorrrelacionado"). Não toca dígitos.
+const colapsa = (s) => (typeof s === 'string' ? s.replace(/([A-Za-zÀ-ÿ])\1{2,}/g, '$1$1') : s);
+function normalizarTela(c) {
+  for (const k of ['titulo', 'prefixo', 'destaque', 'sufixo', 'extra', 'antes', 'numero', 'depois', 'rotulo', 'follow']) {
+    if (typeof c[k] === 'string') c[k] = colapsa(c[k]);
+  }
+  if (Array.isArray(c.linhas)) c.linhas = c.linhas.map(colapsa);
+  if (Array.isArray(c.resto)) c.resto = c.resto.map(colapsa);
+  if (Array.isArray(c.itens)) for (const it of c.itens) if (Array.isArray(it.linhas)) it.linhas = it.linhas.map(colapsa);
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(__dirname, '../..');
@@ -76,9 +88,25 @@ async function gerar() {
 
   // 1. roteiro → script.json (onde o Remotion lê) + cópia pro artifact
   const script = await gerarScriptVideo({ tema: t.tema, resumo: t.resumo });
-  // sanitiza a NARRAÇÃO por código antes do TTS (XTTS não pode ler símbolo/número solto).
-  // A TELA usa outros campos (linhas/titulo/numero) — não é afetada.
-  for (const c of script.cenas) c.narracao = sanitizeNarracao(c.narracao);
+  // sanitiza a NARRAÇÃO por código antes do TTS (XTTS não pode ler símbolo/número solto)
+  // e normaliza typo de TELA (3+ letras repetidas). A tela usa outros campos, não a narração.
+  for (const c of script.cenas) {
+    c.narracao = sanitizeNarracao(c.narracao);
+    normalizarTela(c);
+  }
+
+  // Fase 2: fundo fotográfico POR-RUN. Gera (cache) e liga 'foto' SÓ neste run (defaults
+  // committados ficam em 'solido'). Se falhar, segue no marinho sólido (degradação graciosa).
+  try {
+    const bgRel = `bg/video-${hoje()}.png`;
+    await gerarFundo({ outPath: resolve(REMOTION, 'public', bgRel) });
+    script.bg = bgRel;
+    script.bgMode = 'foto';
+    console.log(`[video] fundo fotográfico ligado neste run: ${bgRel}`);
+  } catch (e) {
+    console.warn('[video] fundo falhou — segue no marinho sólido:', e.message);
+  }
+
   await mkdir(dirname(REMO_SCRIPT), { recursive: true });
   await writeFile(REMO_SCRIPT, JSON.stringify(script, null, 2) + '\n');
   await mkdir(VIDEO_OUT, { recursive: true });

@@ -10,11 +10,14 @@ import { BG_MODE } from './theme';
 // nos slides de conteúdo. `index`/`total` controlam o pan; `strong` reforça o scrim.
 export const Background: React.FC<{
   bg?: string;
+  mode?: 'foto' | 'solido';
   index?: number;
   total?: number;
   strong?: boolean;
-}> = ({ bg, index = 0, total = 1, strong = false }) => {
-  if (BG_MODE === 'solido' || !bg) return null;
+}> = ({ bg, mode, index = 0, total = 1, strong = false }) => {
+  // mode (por-run, do script.json) sobrepõe o default committado BG_MODE. Sem foto/bg → sólido.
+  const m = mode || BG_MODE;
+  if (m === 'solido' || !bg) return null;
 
   // crop/zoom determinístico por slide (capa = cena cheia; conteúdo = zoom + pan)
   const zoom = index === 0 ? 1.0 : 1.22;

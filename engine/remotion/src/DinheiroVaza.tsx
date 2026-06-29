@@ -344,7 +344,7 @@ export const DinheiroVaza: React.FC = () => {
   useBrandFonts();
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg }}>
-      <Background bg={(script as any).bg} />
+      <Background bg={(script as any).bg} mode={(script as any).bgMode} />
       <Series>
         {script.cenas.map((c: any) => {
           const frames = sceneFrames(c.id);

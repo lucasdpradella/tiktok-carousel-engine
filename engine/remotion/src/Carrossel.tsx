@@ -164,7 +164,7 @@ export const Carrossel: React.FC = () => {
   const s = slides[i];
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg }}>
-      <Background bg={(carrossel as any).bg} index={i} total={slides.length} strong={!['gancho', 'cta'].includes(s.beat)} />
+      <Background bg={(carrossel as any).bg} mode={(carrossel as any).bgMode} index={i} total={slides.length} strong={!['gancho', 'cta'].includes(s.beat)} />
       <Frame />
       <Header index={i} total={slides.length} />
       <Slide s={s} />
