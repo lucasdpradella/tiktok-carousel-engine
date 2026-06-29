@@ -14,9 +14,40 @@ const SYS_PATH = resolve(__dirname, '../prompts/system-roteirista.md');
 const BIB_PATH = resolve(__dirname, '../prompts/financas-comportamentais.md');
 const OUT = resolve(__dirname, '../../remotion/src/carrossel.json');
 
-const R_MAX = 14, I_MAX = 13, PASSO_MAX = 40, CORPO_MAX = 90;
+const R_MAX = 18, I_MAX = 16, PASSO_MAX = 40, CORPO_MAX = 90; // calibrado p/ vocabulário amplo (diversificação, rentabilidade...)
 const CTA_TITULO = [['Comenta', 'r'], ['PRADEX', 'i']];
 const CTA_CORPO = 'que eu te mando o link no direto. E me segue pra não morrer sem dinheiro.';
+
+// normaliza typo de TELA: 3+ letras idênticas seguidas -> 2 (não toca dígitos).
+const colapsa = (x) => (typeof x === 'string' ? x.replace(/([A-Za-zÀ-ÿ])\1{2,}/g, '$1$1') : x);
+
+// Compliance = AÇÃO, não TEMA (mesma lista do roteirista de vídeo). Bloqueia só recomendação
+// imperativa, promessa de retorno ou timing. Libera conceito/estrutura/reframe/raciocínio próprio.
+const COMPLIANCE_PROIBIDO = [
+  /\binvist[ae]m? em\b/,
+  /\baplique[m]? em\b/,
+  /\bcoloque[m]?\b[^.]{0,20}\bdinheiro\b/,
+  /\bcompre[m]?\b/,
+  /\bvenda[m]? (a[çc][õo]es|d[óo]lar|cripto|bitcoin|fundos?|t[íi]tulos?|seus?|suas?)/,
+  /\brecomendo\b/,
+  /\b(retorno|rentabilidade|lucro|ganho)s?\b[^.]{0,18}garantid/,
+  /garantid\w*[^.]{0,18}(retorno|rentabilidade|lucro|por cento|%|\d)/,
+  /\blucro certo\b/,
+  /\brende\w*[^.]{0,12}garantid/,
+  /\b(vai|vão) (subir|cair|disparar|despencar|explodir|desabar)\b/,
+  /\bhora de (comprar|vender|investir|entrar|sair)\b/,
+  /\bagora é a hora\b/,
+  /\b(d[óo]lar|bolsa|ibovespa|bitcoin|a[çc][õo]es)\b[^.]{0,15}\bvai (pra|para|a|chegar|bater|virar)\b/,
+];
+function checarComplianceTexto(txt, onde) {
+  const t = String(txt || '').toLowerCase();
+  for (const re of COMPLIANCE_PROIBIDO) {
+    const m = t.match(re);
+    if (m) {
+      throw new Error(`${onde}: AÇÃO proibida ("${m[0]}") — recomendação/promessa/timing. Reframe e ensine o conceito e a estrutura, sem mandar comprar/vender/aplicar, sem prometer retorno e sem prever preço.`);
+    }
+  }
+}
 
 function validar(text) {
   let p;
@@ -33,6 +64,11 @@ function validar(text) {
   s.forEach((sl, i) => {
     const n = i + 1;
     if (!Array.isArray(sl.titulo) || !sl.titulo.length) throw new Error(`slide ${n}: titulo ausente`);
+    // normaliza typo de TELA (3+ letras iguais -> 2) ANTES de medir caractere
+    sl.titulo = sl.titulo.map((pr) => (Array.isArray(pr) && typeof pr[0] === 'string' ? [colapsa(pr[0]), pr[1]] : pr));
+    if (typeof sl.corpo === 'string') sl.corpo = colapsa(sl.corpo);
+    if (Array.isArray(sl.passos)) sl.passos = sl.passos.map((x) => (typeof x === 'string' ? colapsa(x) : x));
+    if (typeof sl.numero === 'string') sl.numero = colapsa(sl.numero);
     for (const pair of sl.titulo) {
       if (!Array.isArray(pair) || pair.length !== 2 || typeof pair[0] !== 'string') {
         throw new Error(`slide ${n}: titulo mal formado (esperava [texto, estilo])`);
@@ -60,7 +96,12 @@ function validar(text) {
     if (sl.numero != null && !/\d/.test(String(sl.numero))) {
       throw new Error(`slide ${n}: "numero" precisa ter algarismo (ex "R$ 600"), recebi "${sl.numero}"`);
     }
+    // compliance: bloqueia AÇÃO (recomendação/promessa/timing) na tela do slide
+    const txtSlide = [sl.titulo.map((t) => t[0]).join(' '), sl.corpo, (sl.passos || []).join(' '), sl.numero].filter(Boolean).join(' ');
+    checarComplianceTexto(txtSlide, `slide ${n}`);
   });
+
+  checarComplianceTexto(p.caption, 'caption');
 
   if (s[0].beat !== 'gancho') throw new Error('primeiro slide precisa ser beat "gancho"');
   if (s[s.length - 1].beat !== 'cta') throw new Error('último slide precisa ser beat "cta"');
