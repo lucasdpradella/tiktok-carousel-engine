@@ -50,6 +50,12 @@ const PAGES_BASE = (
 ).replace(/\/$/, '');
 const DRY_RUN = process.env.DRY_RUN === 'true';
 const POST_PHASE = process.argv.includes('--post');
+// MODO_SEMANAL — hook da cadência semanal (decidido 2026-06-30): por ora 'so-video' (a quarta
+// produz só vídeo; o carrossel é manual). 'alterna' (FUTURO) revezaria vídeo↔carrossel por um
+// CONTADOR PERSISTENTE de runs postados (ex.: campo `runs_postados` em estado-video.json) —
+// não por paridade de dia, que quebra com 1 run/semana. A decisão alterna mora num dispatcher
+// acima dos 2 workflows; aqui é só o hook. 'so-video' ignora o contador e sempre gera vídeo.
+const MODO_SEMANAL = process.env.MODO_SEMANAL || 'so-video';
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 const POLL_INTERVAL_MS = 10 * 1000;
 
@@ -84,7 +90,7 @@ async function gerar() {
     console.log(`[video] fila acabou (idx ${idx} >= ${temas.length} temas). Saindo limpo.`);
     return;
   }
-  console.log(`[video] tema #${idx}: "${t.tema}" (dryRun=${DRY_RUN})`);
+  console.log(`[video] tema #${idx}: "${t.tema}" (dryRun=${DRY_RUN}, modoSemanal=${MODO_SEMANAL})`);
 
   // 1. roteiro → script.json (onde o Remotion lê) + cópia pro artifact
   const script = await gerarScriptVideo({ tema: t.tema, resumo: t.resumo });
@@ -124,6 +130,20 @@ async function gerar() {
   // 3. render Remotion → MP4 (npm install é feito pelo workflow antes)
   await run('npx', ['remotion', 'render', 'src/index.ts', 'DinheiroVaza', 'out/dinheiro-vaza.mp4'], { cwd: REMOTION });
   console.log(`[video] MP4 renderizado: ${MP4}`);
+
+  // 3b. ACELERA 1,3x — asset único (9:16/H.264) que serve TikTok E Instagram.
+  //   setpts=PTS/1.3 (vídeo) + atempo=1.3 (áudio: preserva o PITCH → voz clonada natural,
+  //   só mais rápida; NUNCA asetrate, que deixaria a voz aguda). ~43s → ~33s (range de Reels).
+  //   ⚠️ A partir daqui o asset JÁ sai acelerado: o Lucas NÃO acelera mais no app (1,3×1,3≈1,7x).
+  const MP4_FAST = resolve(REMOTION, 'out/dinheiro-vaza-1_3x.mp4');
+  await run('ffmpeg', [
+    '-y', '-i', MP4,
+    '-filter_complex', '[0:v]setpts=PTS/1.3[v];[0:a]atempo=1.3[a]',
+    '-map', '[v]', '-map', '[a]', '-c:v', 'libx264', '-c:a', 'aac',
+    MP4_FAST,
+  ], { cwd: REMOTION });
+  await rename(MP4_FAST, MP4); // substitui o MP4 pelo acelerado (stage/caption usam este)
+  console.log('[video] MP4 acelerado 1,3x (voz natural via atempo) — Lucas posta o arquivo direto, sem acelerar no app');
 
   // caption sugerida (sempre — o Lucas cola no app ao finalizar)
   await writeFile(CAPTION, montarCaption(script));
