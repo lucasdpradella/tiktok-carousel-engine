@@ -49,11 +49,17 @@ const COMPLIANCE_PROIBIDO = [
   /garantid\w*[^.]{0,18}(retorno|rentabilidade|lucro|por cento|%|\d)/,
   /\blucro certo\b/,
   /\brende\w*[^.]{0,12}garantid/,
-  // timing / previsão de preço
-  /\b(vai|vão) (subir|cair|disparar|despencar|explodir|desabar)\b/,
-  /\bhora de (comprar|vender|investir|entrar|sair)\b/,
+  // timing / previsão de direção (reforçado p/ o bloco mercado/economia, 2026-06-30)
+  /\b(vai|vão|tende a|tendem a|deve|devem) (subir|cair|disparar|despencar|explodir|desabar|valorizar|desvalorizar)\b/,
+  /\b(hora|momento) de (comprar|vender|investir|entrar|sair|aproveitar)\b/,
+  /\b(hora|momento) (de|pra|para) (a |o )?(renda fixa|bolsa|a[çc][õo]es|d[óo]lar|cripto|bitcoin|t[íi]tulos?)\b/,
   /\bagora é a hora\b/,
   /\b(d[óo]lar|bolsa|ibovespa|bitcoin|a[çc][õo]es)\b[^.]{0,15}\bvai (pra|para|a|chegar|bater|virar)\b/,
+  // valuation call (comprar/vender disfarçado): "está barato/caro", "barato demais pra comprar"
+  /\b(est[áa]|t[áa])\s+(barat[oa]|car[oa])\b/,
+  /\b(barat[oa]|car[oa])\s+(demais|pra (comprar|entrar))\b/,
+  // ticker específico (ex: petr4, vale3) — nunca citar papel individual
+  /\b[a-z]{4}\d{1,2}\b/,
 ];
 function _textoCena(c) {
   const p = [c.narracao, c.titulo, c.corpo, c.antes, c.numero, c.depois, c.rotulo, c.prefixo, c.destaque, c.sufixo, c.extra, c.follow];
