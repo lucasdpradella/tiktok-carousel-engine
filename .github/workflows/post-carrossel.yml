@@ -27,8 +27,10 @@ on:
         required: false
         default: ''
         type: string
-  schedule:
-    - cron: '0 11 3,7,11,15,19,23,27,31 * *'   # 8h BRT — carrossel em dias alternados com o vídeo (§0 virado)
+  # schedule DESLIGADO (2026-06-30): carrossel saiu do schedule semanal (só-vídeo na quarta),
+  # fica só sob demanda via workflow_dispatch. NÃO religar sem decisão de produto.
+  # schedule:
+  #   - cron: '0 11 3,7,11,15,19,23,27,31 * *'
 
 concurrency:
   group: post-carrossel
