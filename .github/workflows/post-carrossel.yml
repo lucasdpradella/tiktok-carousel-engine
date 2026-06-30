@@ -48,6 +48,11 @@ jobs:
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run || 'true' }}
       TOPICO: ${{ inputs.topico }}
+      # Cross-post IG (full-auto, isolado). Kill-switch via repo VARIABLE — flipar sem commit.
+      IG_CROSSPOST: ${{ vars.IG_CROSSPOST || 'off' }}
+      IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
 
     steps:
       - name: Checkout
@@ -94,6 +99,13 @@ jobs:
       - name: Post to inbox (phase 2)
         if: env.DRY_RUN != 'true'
         run: node engine/video/run-carrossel.mjs --post
+
+      # Cross-post Carrossel no IG (full-auto), DEPOIS dos JPEGs públicos no Pages. Isolado:
+      # !cancelled() + continue-on-error + exit 0 interno = NUNCA derruba o job. Só com IG_CROSSPOST=on.
+      - name: Cross-post Carrossel no Instagram (isolado)
+        if: ${{ !cancelled() && env.DRY_RUN != 'true' && env.IG_CROSSPOST == 'on' }}
+        continue-on-error: true
+        run: node engine/openai/src/cross-post-ig.mjs --carrossel
 
       - name: Commit & push estado-carrossel.json
         if: env.DRY_RUN != 'true'
