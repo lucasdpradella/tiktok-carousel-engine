@@ -74,7 +74,8 @@ def main():
         out = model.inference(
             text, "pt", gpt_cond_latent, speaker_embedding,
             speed=1.0, enable_text_splitting=True,
-            temperature=0.75, repetition_penalty=4.0,
+            temperature=0.60, repetition_penalty=5.0,
+            top_p=0.80, top_k=40,
         )
         wav = out["wav"]
         if hasattr(wav, "cpu"):

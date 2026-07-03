@@ -132,12 +132,11 @@ async function gerar() {
   console.log(`[video] MP4 renderizado: ${MP4}`);
 
   // 3b. ACELERA o pace no ffmpeg (asset único 9:16/H.264 p/ TikTok E IG).
-  //   O XTTS agora gera em speed=1.0 (voz natural, tuning-voz-xtts §1), então o ffmpeg assume o
-  //   PACE INTEIRO: fator 1.95 = o efetivo aprovado (antes era XTTS 1.5 × ffmpeg 1.3 = 1.95).
-  //   setpts=PTS/1.95 (vídeo) + atempo=1.95 (áudio: preserva o PITCH → voz natural, só mais rápida;
-  //   NUNCA asetrate). atempo=1.95 ≤ 2.0 → filtro único; se um dia passar de 2.0, encadear atempo.
+  //   Voz agora NATURAL (XTTS speed=1.0 + tuning v2) — o pace fica em 1.3 (não precisa mais do 1.95).
+  //   setpts=PTS/1.3 (vídeo) + atempo=1.3 (áudio: preserva o PITCH → voz natural, só mais rápida;
+  //   NUNCA asetrate). atempo=1.3 = filtro único.
   //   ⚠️ O asset JÁ sai no pace final: o Lucas NÃO acelera mais no app.
-  const PACE = 1.95;
+  const PACE = 1.3;
   const MP4_FAST = resolve(REMOTION, 'out/dinheiro-vaza-fast.mp4');
   await run('ffmpeg', [
     '-y', '-i', MP4,
