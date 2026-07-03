@@ -2,10 +2,9 @@ name: post-carrossel
 
 # Fase C — carrossel DIDÁTICO multi-slide (roteiro Igor → render Remotion N slides → JPEG → inbox FOTO).
 #
-# ⚠️ CRON DESLIGADO (§0): o multi-slide vai SUBSTITUIR o PIL de 2 slides, mas só depois de provado
-# rodando sozinho. Até lá, só workflow_dispatch, e o PIL (post-tiktok.yml) SEGUE postando como rede.
-# Quando ligar: descomentar o schedule abaixo (0 11 */2 * * = 8h BRT) E desligar o cron do PIL em
-# post-tiktok.yml — NÃO antes de o multi-slide cair no inbox e ser aprovado.
+# Cadência (2026-07-03): grade semanal — carrossel seg+sex, vídeo qua (post-video.yml). Alterna
+# carrossel→vídeo→carrossel na semana. O PIL antigo (post-tiktok.yml) segue aposentado.
+# IG cross-post OFF aqui — o Instagram recebe só o vídeo de quarta.
 #
 # Modos:
 #   dry_run=true  (default) → GATE: gera roteiro + fundo + render N JPEG → sobe como artifact. Não posta.
@@ -27,10 +26,8 @@ on:
         required: false
         default: ''
         type: string
-  # schedule DESLIGADO (2026-06-30): carrossel saiu do schedule semanal (só-vídeo na quarta),
-  # fica só sob demanda via workflow_dispatch. NÃO religar sem decisão de produto.
-  # schedule:
-  #   - cron: '0 11 3,7,11,15,19,23,27,31 * *'
+  schedule:
+    - cron: '0 11 * * 1,5'   # segunda e sexta, 11h UTC = 8h BRT — carrossel no TikTok (2026-07-03)
 
 concurrency:
   group: post-carrossel
@@ -51,7 +48,7 @@ jobs:
       DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run || 'true' }}
       TOPICO: ${{ inputs.topico }}
       # Cross-post IG (full-auto, isolado). Kill-switch via repo VARIABLE — flipar sem commit.
-      IG_CROSSPOST: ${{ vars.IG_CROSSPOST || 'off' }}
+      IG_CROSSPOST: 'off'   # HARD off: carrossel NUNCA espelha no IG (só o vídeo semanal cross-posta)
       IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
       IG_USER_ID: ${{ secrets.IG_USER_ID }}
       IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
