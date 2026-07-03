@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # tts_ci.py — gera a narração do vídeo no GitHub Actions (§2c do briefing-mestre).
 # Usa os speaker latents JÁ DECIFRADOS (não precisa do WAV original) + XTTS-v2.
-# Por cena: model.inference(narracao, "pt", latents, speed=1.5) -> WAV -> EQ de-muffle
+# Por cena: model.inference(narracao, "pt", latents, speed=1.0 + temp/rep_penalty) -> WAV -> EQ de-muffle
+# (speed=1.0 = voz natural; a aceleração do pace vem toda do ffmpeg no run-video, preservando o timbre)
 # + loudnorm (ffmpeg) -> mede duração. Escreve <id>.wav + durations.json no outdir.
 #
 # Uso: python tts_ci.py <script.json> <speaker_latents.pth> <outdir>
@@ -72,7 +73,8 @@ def main():
             continue
         out = model.inference(
             text, "pt", gpt_cond_latent, speaker_embedding,
-            speed=1.5, enable_text_splitting=True,
+            speed=1.0, enable_text_splitting=True,
+            temperature=0.75, repetition_penalty=4.0,
         )
         wav = out["wav"]
         if hasattr(wav, "cpu"):

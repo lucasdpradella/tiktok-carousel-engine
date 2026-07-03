@@ -131,19 +131,22 @@ async function gerar() {
   await run('npx', ['remotion', 'render', 'src/index.ts', 'DinheiroVaza', 'out/dinheiro-vaza.mp4'], { cwd: REMOTION });
   console.log(`[video] MP4 renderizado: ${MP4}`);
 
-  // 3b. ACELERA 1,3x — asset único (9:16/H.264) que serve TikTok E Instagram.
-  //   setpts=PTS/1.3 (vídeo) + atempo=1.3 (áudio: preserva o PITCH → voz clonada natural,
-  //   só mais rápida; NUNCA asetrate, que deixaria a voz aguda). ~43s → ~33s (range de Reels).
-  //   ⚠️ A partir daqui o asset JÁ sai acelerado: o Lucas NÃO acelera mais no app (1,3×1,3≈1,7x).
-  const MP4_FAST = resolve(REMOTION, 'out/dinheiro-vaza-1_3x.mp4');
+  // 3b. ACELERA o pace no ffmpeg (asset único 9:16/H.264 p/ TikTok E IG).
+  //   O XTTS agora gera em speed=1.0 (voz natural, tuning-voz-xtts §1), então o ffmpeg assume o
+  //   PACE INTEIRO: fator 1.95 = o efetivo aprovado (antes era XTTS 1.5 × ffmpeg 1.3 = 1.95).
+  //   setpts=PTS/1.95 (vídeo) + atempo=1.95 (áudio: preserva o PITCH → voz natural, só mais rápida;
+  //   NUNCA asetrate). atempo=1.95 ≤ 2.0 → filtro único; se um dia passar de 2.0, encadear atempo.
+  //   ⚠️ O asset JÁ sai no pace final: o Lucas NÃO acelera mais no app.
+  const PACE = 1.95;
+  const MP4_FAST = resolve(REMOTION, 'out/dinheiro-vaza-fast.mp4');
   await run('ffmpeg', [
     '-y', '-i', MP4,
-    '-filter_complex', '[0:v]setpts=PTS/1.3[v];[0:a]atempo=1.3[a]',
+    '-filter_complex', `[0:v]setpts=PTS/${PACE}[v];[0:a]atempo=${PACE}[a]`,
     '-map', '[v]', '-map', '[a]', '-c:v', 'libx264', '-c:a', 'aac',
     MP4_FAST,
   ], { cwd: REMOTION });
   await rename(MP4_FAST, MP4); // substitui o MP4 pelo acelerado (stage/caption usam este)
-  console.log('[video] MP4 acelerado 1,3x (voz natural via atempo) — Lucas posta o arquivo direto, sem acelerar no app');
+  console.log(`[video] MP4 no pace final ${PACE}x (voz natural via atempo) — Lucas posta o arquivo direto, sem acelerar no app`);
 
   // caption sugerida (sempre — o Lucas cola no app ao finalizar)
   await writeFile(CAPTION, montarCaption(script));
