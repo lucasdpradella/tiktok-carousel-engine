@@ -8,6 +8,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chat } from './openai-client.mjs';
+import { acharAcaoProibida, contarNegacoes } from './compliance-guard.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SYS_PATH = resolve(__dirname, '../prompts/system-roteirista.md');
@@ -21,31 +22,12 @@ const CTA_CORPO = 'que eu te mando o link no direto. E me segue pra não morrer 
 // normaliza typo de TELA: 3+ letras idênticas seguidas -> 2 (não toca dígitos).
 const colapsa = (x) => (typeof x === 'string' ? x.replace(/([A-Za-zÀ-ÿ])\1{2,}/g, '$1$1') : x);
 
-// Compliance = AÇÃO, não TEMA (mesma lista do roteirista de vídeo). Bloqueia só recomendação
-// imperativa, promessa de retorno ou timing. Libera conceito/estrutura/reframe/raciocínio próprio.
-const COMPLIANCE_PROIBIDO = [
-  /\binvist[ae]m? em\b/,
-  /\baplique[m]? em\b/,
-  /\bcoloque[m]?\b[^.]{0,20}\bdinheiro\b/,
-  /\bcompre[m]?\b/,
-  /\bvenda[m]? (a[çc][õo]es|d[óo]lar|cripto|bitcoin|fundos?|t[íi]tulos?|seus?|suas?)/,
-  /\brecomendo\b/,
-  /\b(retorno|rentabilidade|lucro|ganho)s?\b[^.]{0,18}garantid/,
-  /garantid\w*[^.]{0,18}(retorno|rentabilidade|lucro|por cento|%|\d)/,
-  /\blucro certo\b/,
-  /\brende\w*[^.]{0,12}garantid/,
-  /\b(vai|vão) (subir|cair|disparar|despencar|explodir|desabar)\b/,
-  /\bhora de (comprar|vender|investir|entrar|sair)\b/,
-  /\bagora é a hora\b/,
-  /\b(d[óo]lar|bolsa|ibovespa|bitcoin|a[çc][õo]es)\b[^.]{0,15}\bvai (pra|para|a|chegar|bater|virar)\b/,
-];
+// Compliance = AÇÃO, não TEMA — lista no módulo compartilhado (compliance-guard.mjs), igual ao
+// vídeo (sem drift). Bloqueia recomendação/promessa/timing/ticker/ALOCAÇÃO PRESCRITIVA (% carteira).
 function checarComplianceTexto(txt, onde) {
-  const t = String(txt || '').toLowerCase();
-  for (const re of COMPLIANCE_PROIBIDO) {
-    const m = t.match(re);
-    if (m) {
-      throw new Error(`${onde}: AÇÃO proibida ("${m[0]}") — recomendação/promessa/timing. Reframe e ensine o conceito e a estrutura, sem mandar comprar/vender/aplicar, sem prometer retorno e sem prever preço.`);
-    }
+  const hit = acharAcaoProibida(txt);
+  if (hit) {
+    throw new Error(`${onde}: AÇÃO proibida ("${hit}") — recomendação/promessa/timing/alocação prescritiva. Reframe e ensine o conceito e a estrutura; para dosagem responda com PROCESSO ("depende do perfil e objetivo, é conversa de planejamento"), nunca com percentual.`);
   }
 }
 
@@ -105,6 +87,21 @@ function validar(text) {
 
   if (s[0].beat !== 'gancho') throw new Error('primeiro slide precisa ser beat "gancho"');
   if (s[s.length - 1].beat !== 'cta') throw new Error('último slide precisa ser beat "cta"');
+
+  // §3/§4 DEMONSTRAR, não afirmar — força os beats que costumam ser pulados:
+  if (!s.some((sl) => sl.beat === 'exemplo' && sl.numero != null && /\d/.test(String(sl.numero)))) {
+    throw new Error('falta o BEAT 4: um slide "exemplo" com "numero" ILUSTRATIVO (número que MOSTRA o mecanismo). Número só pra negar algo não conta.');
+  }
+  if (!s.some((sl) => sl.beat === 'contraste')) {
+    throw new Error('falta o BEAT 6: um slide "contraste" concreto (antes vs depois, ou caminho A vs B). Mostre as duas pontas.');
+  }
+  const txtTudo =
+    s.map((sl) => [(sl.titulo || []).map((t) => t[0]).join(' '), sl.corpo, (sl.passos || []).join(' ')].filter(Boolean).join(' ')).join(' ') +
+    ' ' + p.caption;
+  const negs = contarNegacoes(txtTudo);
+  if (negs >= 4) {
+    throw new Error(`NEGAÇÃO EMPILHADA (${negs} frases "não é X"): construa pela AFIRMAÇÃO com exemplo, no máximo 1 negação fora do reframe do gancho.`);
+  }
 
   // CTA travada de forma determinística (garante a frase exata, sem depender do modelo)
   const cta = s[s.length - 1];

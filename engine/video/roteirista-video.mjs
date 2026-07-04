@@ -9,6 +9,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chat } from '../openai/src/openai-client.mjs';
+import { acharAcaoProibida, contarNegacoes } from '../openai/src/compliance-guard.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMAS = resolve(__dirname, 'temas-video.json');
@@ -32,35 +33,9 @@ function sanitize(t) {
   return t.trim();
 }
 
-// Backstop de compliance — bloqueia a AÇÃO, não o TEMA (recalibrado 2026-06-29, estilo Igor).
-// Rejeita SÓ: recomendação imperativa, promessa de retorno, ou timing/previsão de preço.
-// LIBERA conceito/estrutura (diversificação, descorrelação, dólar como proteção, renda fixa,
-// offshore, vieses), reframe "X não é Y é Z" e raciocínio próprio ("hoje tenho mais em proteção").
-const COMPLIANCE_PROIBIDO = [
-  // recomendação direta / imperativa ao espectador
-  /\binvist[ae]m? em\b/,
-  /\baplique[m]? em\b/,
-  /\bcoloque[m]?\b[^.]{0,20}\bdinheiro\b/,
-  /\bcompre[m]?\b/,
-  /\bvenda[m]? (a[çc][õo]es|d[óo]lar|cripto|bitcoin|fundos?|t[íi]tulos?|seus?|suas?)/,
-  /\brecomendo\b/,
-  // promessa de retorno garantido
-  /\b(retorno|rentabilidade|lucro|ganho)s?\b[^.]{0,18}garantid/,
-  /garantid\w*[^.]{0,18}(retorno|rentabilidade|lucro|por cento|%|\d)/,
-  /\blucro certo\b/,
-  /\brende\w*[^.]{0,12}garantid/,
-  // timing / previsão de direção (reforçado p/ o bloco mercado/economia, 2026-06-30)
-  /\b(vai|vão|tende a|tendem a|deve|devem) (subir|cair|disparar|despencar|explodir|desabar|valorizar|desvalorizar)\b/,
-  /\b(hora|momento) de (comprar|vender|investir|entrar|sair|aproveitar)\b/,
-  /\b(hora|momento) (de|pra|para) (a |o )?(renda fixa|bolsa|a[çc][õo]es|d[óo]lar|cripto|bitcoin|t[íi]tulos?)\b/,
-  /\bagora é a hora\b/,
-  /\b(d[óo]lar|bolsa|ibovespa|bitcoin|a[çc][õo]es)\b[^.]{0,15}\bvai (pra|para|a|chegar|bater|virar)\b/,
-  // valuation call (comprar/vender disfarçado): "está barato/caro", "barato demais pra comprar"
-  /\b(est[áa]|t[áa])\s+(barat[oa]|car[oa])\b/,
-  /\b(barat[oa]|car[oa])\s+(demais|pra (comprar|entrar))\b/,
-  // ticker específico (ex: petr4, vale3) — nunca citar papel individual
-  /\b[a-z]{4}\d{1,2}\b/,
-];
+// Backstop de compliance — a lista de padrões vive no módulo compartilhado (compliance-guard.mjs),
+// usado igual pelo carrossel (sem drift). Bloqueia a AÇÃO (recomendação/promessa/timing/ticker/
+// ALOCAÇÃO PRESCRITIVA), nunca o TEMA. Libera conceito/estrutura/reframe/raciocínio próprio.
 function _textoCena(c) {
   const p = [c.narracao, c.titulo, c.corpo, c.antes, c.numero, c.depois, c.rotulo, c.prefixo, c.destaque, c.sufixo, c.extra, c.follow];
   if (Array.isArray(c.linhas)) p.push(c.linhas.join(' '));
@@ -69,12 +44,9 @@ function _textoCena(c) {
   return p.filter(Boolean).join(' ');
 }
 function checarCompliance(c, id) {
-  const txt = _textoCena(c).toLowerCase();
-  for (const re of COMPLIANCE_PROIBIDO) {
-    const m = txt.match(re);
-    if (m) {
-      throw new Error(`cena ${id}: AÇÃO proibida ("${m[0]}") na narração/tela — recomendação direta, promessa de retorno ou timing. Pode discutir o conceito, a estrutura e reframar, mas NÃO mande comprar/vender/aplicar, não prometa retorno e não preveja preço.`);
-    }
+  const hit = acharAcaoProibida(_textoCena(c));
+  if (hit) {
+    throw new Error(`cena ${id}: AÇÃO proibida ("${hit}") na narração/tela — recomendação direta, promessa de retorno, timing OU alocação prescritiva (% de carteira, "precisa estar em X"). Discuta o conceito/estrutura e reframe; para dosagem, responda com PROCESSO ("depende do seu perfil e objetivo, é conversa de planejamento"), nunca com número/percentual.`);
   }
 }
 
@@ -88,6 +60,21 @@ const SYSTEM = `Você é o roteirista do PRADEX (série "Manual do Dinheiro" em 
   - Timing/previsão de preço: "vai subir/cair", "agora é a hora de comprar/vender", "o dólar vai pra R$ X".
 Em vez de dizer O QUE FAZER, ENSINE a pensar: o conceito, o porquê, a estrutura, o trade-off. Compartilhar o próprio raciocínio é OK como exemplo; mandar o espectador comprar/vender/aplicar NÃO. No contraste e no fecho, reframe e ensine — pode contrastar conceitos (aposta vs estrutura, enxergar vs não enxergar), mas nunca vire recomendação, promessa ou timing.
 ⚠️ Ao falar de PROTEÇÃO/ESTRUTURA (dólar, diversificação, offshore), conecte a RISCOS específicos (câmbio, risco Brasil/fiscal, inflação, concentração) e ensine o PORQUÊ. NUNCA prometa que algo "mantém o valor", que "o patrimônio se mantém", nem qualquer ganho — é garantia implícita e PROIBIDO. Use hedge ("pode", "tende a", "historicamente") e foque no mecanismo e no trade-off, não no resultado.
+
+# REGRA DURA — DEMONSTRAR, NÃO AFIRMAR (o que separa "sofisticado mas inútil" de aula de verdade)
+NÃO basta AFIRMAR a tese e esperar que o leitor acredite. FAÇA o leitor ENXERGAR o mecanismo: cena → número → contraste. Invioláveis:
+(A) EXEMPLO COM NÚMERO (beat 4, cena "numero") é OBRIGATÓRIO — número ILUSTRATIVO ("imagine, só pra ilustrar...", "digamos que...") que mostra o mecanismo EM AÇÃO e o custo. Número usado só pra NEGAR algo ("não é sobre o dólar ir a seis reais") NÃO conta como beat 4.
+(B) CONTRASTE CONCRETO (beat 6, cena "duplo") é OBRIGATÓRIO — antes vs depois, OU caminho A vs B, OU família/carteira 1 vs 2. Mostre as DUAS pontas, não só afirme que há diferença.
+(C) ANTI-NEGAÇÃO EMPILHADA — no máximo 1 frase "não é X" no roteiro todo (fora do reframe do gancho). Proibido "não é A. não é B. não é C." como corpo: isso é falsa profundidade. A tese se sustenta pelo que É, com exemplo.
+(D) AFIRMOU → PROVE NA FRASE SEGUINTE — toda afirmação de mecanismo ("o real se desvaloriza estruturalmente", "hedge protege") vem IMEDIATAMENTE seguida de exemplo/número/cena que a sustente. Afirmação solta = reprovado.
+(E) GANCHO ANCORADO (beat 1) — abra numa CENA COTIDIANA já vivida (aeroporto, remédio importado, curso do filho fora, boleto que subiu), não no conceito abstrato. O reframe "X não é Y, é Z" vem logo DEPOIS, mas a cena vem PRIMEIRO.
+(F) DOSAGEM = PROCESSO, NÃO NÚMERO — quando o tema pedir "quanto" (quanto em dólar, quanto na reserva), NUNCA responda com percentual/faixa (ex "vinte a quarenta por cento") — é alocação prescritiva, PROIBIDO. Responda com PROCESSO: "quanto exatamente depende do seu perfil e objetivo, é conversa de planejamento, não regra de bolso." Mantém compliant E puxa pro serviço.
+
+## EXEMPLOS (siga o PASS, evite o FAIL) — narração em extenso, TTS-safe
+FAIL (vazio, só afirma): "Ter dólar na carteira é reconhecer que a moeda perde valor estruturalmente, não é pessimismo, é realidade histórica."
+PASS (demonstra — cena + número + contraste): "Imagine duas famílias, quinhentos mil reais cada, só pra ilustrar. Uma deixou tudo em real, a outra pôs uma parte em moeda forte. Vem um ano de estresse, o real cai trinta por cento. A primeira acha que não perdeu nada, até tentar pagar o intercâmbio do filho lá fora, sumiu trinta por cento do poder de compra. A segunda amorteceu. Isso é estrutura, não aposta."
+FAIL (alocação prescritiva, PROIBIDO): "Defina um percentual estratégico, entre vinte e quarenta por cento, e mantenha."
+PASS (processo, não número): "Quanto exatamente, não tem regra de bolso, depende do seu perfil e objetivo, isso é conversa de planejamento."
 
 # ESTRUTURA DIDÁTICA — mini-aula RICA em 10 a 12 cenas (1 ideia por cena), nesta ordem:
 - gancho (tipo "gancho"): situação COTIDIANA reconhecível OU um REFRAME no formato "X não é Y, é Z" (ex: "Dólar não é aposta, é estrutura"). 3s.
@@ -209,6 +196,18 @@ async function _gerarUma({ tema, resumo, hint } = {}) {
   if (cenas[0].tipo !== 'gancho') throw new Error('[roteirista-video] primeira cena precisa ser "gancho"');
   if (cenas[cenas.length - 1].tipo !== 'cta') throw new Error('[roteirista-video] última cena precisa ser "cta"');
   if (!cenas.some((c) => c.tipo === 'explicador')) throw new Error('[roteirista-video] falta a cena "explicador" (PRADEX)');
+
+  // §3/§4 DEMONSTRAR, não afirmar — força os beats que o roteirista costuma pular:
+  if (!cenas.some((c) => c.tipo === 'numero')) {
+    throw new Error('[roteirista-video] falta o BEAT 4: uma cena "numero" com EXEMPLO ilustrativo (número que MOSTRA o mecanismo em ação, rotulado "imagine..."). Número só pra negar algo não conta.');
+  }
+  if (!cenas.some((c) => c.tipo === 'duplo')) {
+    throw new Error('[roteirista-video] falta o BEAT 6: uma cena "duplo" de CONTRASTE concreto (antes vs depois, ou carteira A vs B). Mostre as DUAS pontas, não só afirme que há diferença.');
+  }
+  const negs = contarNegacoes(cenas.map(_textoCena).join(' '));
+  if (negs >= 4) {
+    throw new Error(`[roteirista-video] NEGAÇÃO EMPILHADA (${negs} frases "não é X"): a tese se sustenta por CONSTRUÇÃO (o que É + exemplo), não por acúmulo de negação. Reescreva mostrando o que É, com no máximo 1 negação fora do reframe do gancho.`);
+  }
 
   // CTA TRAVADA de forma DETERMINÍSTICA (tela + narração) — não deixa o modelo variar nem cortar.
   // As DUAS partes da frase de marca sempre presentes: o convite + o "me segue...".
