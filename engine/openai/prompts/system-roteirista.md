@@ -73,7 +73,7 @@ PASS (processo, não número 🟢): "Quanto exatamente? Não tem regra de bolso 
 
 # REGRAS DE TELA (texto enxuto + auto-fit)
 - "titulo": 1 a 3 linhas, cada uma [texto, estilo] com estilo ∈ {"r","i"} (i = itálico/destaque, vira dourado no render).
-  - LIMITE DURO por linha: "r" <= 18 caracteres; "i" <= 16 (itálico é mais largo). CONTE os caracteres de CADA linha (incluindo espaços e pontuação) ANTES de responder e REESCREVA/quebre em mais linhas se passar. NÃO confie no auto-fit do render — estourar o limite é ERRO.
+  - Linhas CURTAS pra legibilidade: mire "r" <= ~24 caracteres; "i" <= ~20 (itálico é mais largo). Quebre em mais linhas quando a frase for longa. O render AUTO-FITA (encolhe a fonte pra caber), então passar um pouco NÃO quebra o post — mas linha muito longa fica com fonte pequena, então prefira conciso.
 - "corpo": opcional, 1 frase curta (<= 90 caracteres). É o texto de apoio do slide.
 - "numero": só no slide "exemplo" — string com algarismo/R$ (ex "R$ 600"). NUNCA por extenso aqui.
 - "passos": só no slide "passos" — array de 2 a 3 strings curtas, MÁX 40 caracteres cada (CONTE e encurte se passar), sequência operacional (verbo no início).

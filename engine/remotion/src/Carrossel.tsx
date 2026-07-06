@@ -11,6 +11,17 @@ const CW = 1080;
 const CH = 1350;
 const M = 96;
 
+// AUTO-FIT: encolhe a fonte da linha de título pra caber na largura útil — o post NUNCA quebra
+// por comprimento de linha (o validador do roteiro é folgado; o render garante o encaixe).
+// Estimativa determinística (sem medir DOM): largura média por char relativa ao fontSize (itálico
+// é mais largo). Conservador de propósito (encolhe um tico a mais) pra nunca estourar a margem.
+const AVAIL = CW - 2 * M; // 888px úteis
+function fitSize(text: string, base: number, italic: boolean): number {
+  const charW = italic ? 0.56 : 0.52;
+  const max = AVAIL / (Math.max(1, text.length) * charW);
+  return Math.min(base, Math.max(46, Math.floor(max)));
+}
+
 const titleStyle: React.CSSProperties = {
   fontFamily: SERIF,
   fontWeight: 400,
@@ -22,19 +33,22 @@ const titleStyle: React.CSSProperties = {
 // linha de título: estilo "i" vira dourado itálico (destaque); "r" é marfim
 const Titulo: React.FC<{ linhas: [string, string][]; size?: number }> = ({ linhas, size = 92 }) => (
   <>
-    {linhas.map(([t, st], i) => (
-      <div
-        key={i}
-        style={{
-          ...titleStyle,
-          fontSize: size,
-          color: st === 'i' ? C.accent : C.ink,
-          fontStyle: st === 'i' ? 'italic' : 'normal',
-        }}
-      >
-        {t}
-      </div>
-    ))}
+    {linhas.map(([t, st], i) => {
+      const italic = st === 'i';
+      return (
+        <div
+          key={i}
+          style={{
+            ...titleStyle,
+            fontSize: fitSize(t, size, italic),
+            color: italic ? C.accent : C.ink,
+            fontStyle: italic ? 'italic' : 'normal',
+          }}
+        >
+          {t}
+        </div>
+      );
+    })}
   </>
 );
 

@@ -15,7 +15,9 @@ const SYS_PATH = resolve(__dirname, '../prompts/system-roteirista.md');
 const BIB_PATH = resolve(__dirname, '../prompts/financas-comportamentais.md');
 const OUT = resolve(__dirname, '../../remotion/src/carrossel.json');
 
-const R_MAX = 18, I_MAX = 16, PASSO_MAX = 40, CORPO_MAX = 90; // calibrado p/ vocabulário amplo (diversificação, rentabilidade...)
+// Limites de comprimento agora são SOFT (só warn): o render (Carrossel.tsx) tem auto-fit e encolhe
+// a linha pra caber. Um post NUNCA falha por comprimento de linha estilizada (robustez > rigidez).
+const R_MAX = 28, I_MAX = 24, PASSO_MAX = 44, CORPO_MAX = 100;
 const CTA_TITULO = [['Comenta', 'r'], ['PRADEX', 'i']];
 const CTA_CORPO = 'que eu te mando o link no direto. E me segue pra não morrer sem dinheiro.';
 
@@ -58,13 +60,14 @@ function validar(text) {
       const [t, st] = pair;
       if (!['r', 'i'].includes(st)) pair[1] = 'r';
       const lim = st === 'i' ? I_MAX : R_MAX;
+      // SOFT: nunca dá throw por comprimento — só avisa; o auto-fit do render encolhe pra caber.
       if (t.length > lim) {
-        throw new Error(`slide ${n}: linha "${t}" tem ${t.length} chars (limite ${lim} pro estilo "${st}"). Reescreva mais curta ou quebre em mais linhas.`);
+        console.warn(`[carrossel] slide ${n}: linha "${t}" tem ${t.length} chars (>${lim} p/ "${st}") — render vai encolher (auto-fit).`);
       }
     }
     if (sl.corpo != null) {
       if (typeof sl.corpo !== 'string') throw new Error(`slide ${n}: corpo precisa ser string`);
-      if (sl.corpo.length > CORPO_MAX) throw new Error(`slide ${n}: corpo tem ${sl.corpo.length} chars (limite ${CORPO_MAX}).`);
+      if (sl.corpo.length > CORPO_MAX) console.warn(`[carrossel] slide ${n}: corpo tem ${sl.corpo.length} chars (>${CORPO_MAX}) — segue.`);
     }
     if (sl.passos != null) {
       if (!Array.isArray(sl.passos) || sl.passos.length < 2 || sl.passos.length > 3) {
@@ -72,7 +75,7 @@ function validar(text) {
       }
       for (const ps of sl.passos) {
         if (typeof ps !== 'string') throw new Error(`slide ${n}: passo não-string`);
-        if (ps.length > PASSO_MAX) throw new Error(`slide ${n}: passo "${ps}" tem ${ps.length} chars (limite ${PASSO_MAX}). Encurte.`);
+        if (ps.length > PASSO_MAX) console.warn(`[carrossel] slide ${n}: passo "${ps}" tem ${ps.length} chars (>${PASSO_MAX}) — segue.`);
       }
     }
     if (sl.numero != null && !/\d/.test(String(sl.numero))) {
