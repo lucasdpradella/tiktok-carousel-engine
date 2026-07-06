@@ -100,7 +100,17 @@ async function gerar() {
   for (let i = 0; i < script.slides.length; i++) {
     const name = `slide-${String(i + 1).padStart(2, '0')}.jpg`;
     const out = resolve(JPG_OUT, name);
-    await run(NPX, ['remotion', 'still', 'src/index.ts', 'Carrossel', out, `--frame=${i}`, '--image-format=jpeg'], { cwd: REMOTION });
+    // retry: o Chromium do Remotion às vezes crasha nativo (transiente) — 1 retry evita
+    // derrubar o post inteiro por uma falha esporádica de render.
+    for (let tent = 1; tent <= 2; tent++) {
+      try {
+        await run(NPX, ['remotion', 'still', 'src/index.ts', 'Carrossel', out, `--frame=${i}`, '--image-format=jpeg'], { cwd: REMOTION });
+        break;
+      } catch (e) {
+        if (tent === 2) throw e;
+        console.warn(`[carrossel] render do slide ${i + 1} falhou (${e.message}) — retry 2/2`);
+      }
+    }
     jpgs.push({ name, out });
     console.log(`[carrossel] slide ${i + 1}/${script.slides.length} → ${name}`);
   }

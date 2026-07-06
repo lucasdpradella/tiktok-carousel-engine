@@ -9,7 +9,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chat } from '../openai/src/openai-client.mjs';
-import { acharAcaoProibida, contarNegacoes } from '../openai/src/compliance-guard.mjs';
+import { acharAcaoProibida, contarNegacoes, acharReframeIrresponsavel } from '../openai/src/compliance-guard.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMAS = resolve(__dirname, 'temas-video.json');
@@ -44,9 +44,14 @@ function _textoCena(c) {
   return p.filter(Boolean).join(' ');
 }
 function checarCompliance(c, id) {
-  const hit = acharAcaoProibida(_textoCena(c));
+  const txt = _textoCena(c);
+  const hit = acharAcaoProibida(txt);
   if (hit) {
     throw new Error(`cena ${id}: AÇÃO proibida ("${hit}") na narração/tela — recomendação direta, promessa de retorno, timing OU alocação prescritiva (% de carteira, "precisa estar em X"). Discuta o conceito/estrutura e reframe; para dosagem, responda com PROCESSO ("depende do seu perfil e objetivo, é conversa de planejamento"), nunca com número/percentual.`);
+  }
+  const irr = acharReframeIrresponsavel(txt);
+  if (irr) {
+    throw new Error(`cena ${id}: REFRAME IRRESPONSÁVEL ("${irr}") — NÃO argumente contra proteção/necessidade (plano de saúde, seguro, previdência, reserva). Posicione o VALOR (transferência de risco, custo de NÃO ter, como estruturar bem), nunca "desperdício"/"paga e não usa".`);
   }
 }
 

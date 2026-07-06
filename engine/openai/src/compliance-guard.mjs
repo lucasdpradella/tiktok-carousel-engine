@@ -55,6 +55,27 @@ export function acharAcaoProibida(txt) {
   return null;
 }
 
+// REFRAME IRRESPONSÁVEL (§4 do briefing carrossel-valioso): nunca argumentar CONTRA uma proteção/
+// necessidade básica (plano de saúde, seguro, previdência, reserva) — a casa até VENDE isso.
+// Alvo = o take de má-fé ("desperdício", "paga e não usa", "mau investimento", "não vale a pena ter").
+// NÃO pega o reframe CORRETO ("plano não é investimento, é transferência de risco/proteção").
+const REFRAME_IRRESPONSAVEL = [
+  /\b(plano de sa[úu]de|seguro de vida|seguro|previd[êe]ncia|reserva de emerg[êe]ncia)\b[^.]{0,30}\b(desperd[íi]cio|jogar dinheiro fora|dinheiro jogado fora)\b/,
+  /\bn[ãa]o vale a pena\b[^.]{0,18}\b(ter|contratar|pagar|manter|fazer)\b[^.]{0,18}\b(plano|seguro|previd)/,
+  /\b(plano de sa[úu]de|seguro|previd[êe]ncia)\b[^.]{0,20}\b(mau|p[ée]ssimo|ruim|terr[íi]vel|furada) investimento\b/,
+  /\bpaga\b[^.]{0,25}\b(nunca|quase nunca|s[óo] uma vez|raramente)\b[^.]{0,10}\busa\b/,
+];
+
+/** Retorna o trecho de um REFRAME IRRESPONSÁVEL (proteção pintada como desperdício) ou null. */
+export function acharReframeIrresponsavel(txt) {
+  const t = String(txt || '').toLowerCase();
+  for (const re of REFRAME_IRRESPONSAVEL) {
+    const m = t.match(re);
+    if (m) return m[0];
+  }
+  return null;
+}
+
 // Anti-negação empilhada (§C): conta frases "não é/são/era/foi" no texto INTEIRO do roteiro.
 // O reframe assinatura ("X não é Y, é Z") usa 1; o alvo é o EMPILHAMENTO (o post do dólar tinha 7).
 export function contarNegacoes(txt) {

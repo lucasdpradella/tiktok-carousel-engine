@@ -8,16 +8,17 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chat } from './openai-client.mjs';
-import { acharAcaoProibida, contarNegacoes } from './compliance-guard.mjs';
+import { acharAcaoProibida, contarNegacoes, acharReframeIrresponsavel } from './compliance-guard.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SYS_PATH = resolve(__dirname, '../prompts/system-roteirista.md');
 const BIB_PATH = resolve(__dirname, '../prompts/financas-comportamentais.md');
 const OUT = resolve(__dirname, '../../remotion/src/carrossel.json');
 
-// Limites de comprimento agora são SOFT (só warn): o render (Carrossel.tsx) tem auto-fit e encolhe
-// a linha pra caber. Um post NUNCA falha por comprimento de linha estilizada (robustez > rigidez).
-const R_MAX = 28, I_MAX = 24, PASSO_MAX = 44, CORPO_MAX = 100;
+// Limites = PISO DE LEGIBILIDADE: o quanto cabe ACIMA da fonte mínima do render (Carrossel.tsx).
+// Acima disso, nas tentativas normais o roteirista é OBRIGADO a ENCURTAR (retry); na ÚLTIMA
+// tentativa degrada (warn + auto-fit no piso) pra o post NUNCA falhar. Robustez > rigidez.
+const R_MAX = 34, I_MAX = 30, PASSO_MAX = 46, CORPO_MAX = 110;
 const CTA_TITULO = [['Comenta', 'r'], ['PRADEX', 'i']];
 const CTA_CORPO = 'que eu te mando o link no direto. E me segue pra não morrer sem dinheiro.';
 
@@ -31,9 +32,13 @@ function checarComplianceTexto(txt, onde) {
   if (hit) {
     throw new Error(`${onde}: AÇÃO proibida ("${hit}") — recomendação/promessa/timing/alocação prescritiva. Reframe e ensine o conceito e a estrutura; para dosagem responda com PROCESSO ("depende do perfil e objetivo, é conversa de planejamento"), nunca com percentual.`);
   }
+  const irr = acharReframeIrresponsavel(txt);
+  if (irr) {
+    throw new Error(`${onde}: REFRAME IRRESPONSÁVEL ("${irr}") — NÃO argumente contra proteção/necessidade (plano de saúde, seguro, previdência, reserva). Posicione o VALOR: transferência de risco, o custo de NÃO ter, como estruturar/escolher bem. Nunca "desperdício"/"paga e não usa"/"mau investimento".`);
+  }
 }
 
-function validar(text) {
+function validar(text, { strict = true } = {}) {
   let p;
   try {
     p = JSON.parse(text);
@@ -43,7 +48,9 @@ function validar(text) {
   if (typeof p.caption !== 'string' || !p.caption.trim()) throw new Error('caption ausente');
   if (!Array.isArray(p.hashtags)) p.hashtags = [];
   const s = p.slides;
-  if (!Array.isArray(s) || s.length < 7 || s.length > 9) throw new Error(`esperava 7-9 slides, recebi ${s?.length}`);
+  if (!Array.isArray(s)) throw new Error('slides ausente');
+  if (strict && s.length !== 8) throw new Error(`esperava EXATAMENTE 8 slides (S1-S8), recebi ${s.length}`);
+  if (s.length < 7 || s.length > 9) throw new Error(`slides fora do range aceitável (7-9): ${s.length}`);
 
   s.forEach((sl, i) => {
     const n = i + 1;
@@ -60,9 +67,10 @@ function validar(text) {
       const [t, st] = pair;
       if (!['r', 'i'].includes(st)) pair[1] = 'r';
       const lim = st === 'i' ? I_MAX : R_MAX;
-      // SOFT: nunca dá throw por comprimento — só avisa; o auto-fit do render encolhe pra caber.
+      // PISO: acima do limite, nas tentativas normais EXIGE encurtar (retry); na última degrada (warn).
       if (t.length > lim) {
-        console.warn(`[carrossel] slide ${n}: linha "${t}" tem ${t.length} chars (>${lim} p/ "${st}") — render vai encolher (auto-fit).`);
+        if (strict) throw new Error(`slide ${n}: linha "${t}" tem ${t.length} chars (>${lim} p/ "${st}") — ENCURTE (reescreva/quebre) pra caber LEGÍVEL; não deixe pro auto-fit.`);
+        console.warn(`[carrossel] slide ${n}: linha "${t}" tem ${t.length} chars (>${lim}) — segue no piso do auto-fit.`);
       }
     }
     if (sl.corpo != null) {
@@ -124,8 +132,8 @@ export async function gerarRoteiroCarrossel({ topico, maxTentativas = 4 } = {}) 
   let lastErr = null;
   for (let attempt = 1; attempt <= maxTentativas; attempt++) {
     const user =
-      `Tópico: ${topico}\n\nGere o carrossel didático (7 a 9 slides) seguindo os 8 beats. Saída: só JSON.` +
-      (lastErr ? `\n\nA tentativa anterior foi REJEITADA por: ${lastErr}\nCorrija EXATAMENTE isso (respeite o limite de caracteres por linha) e devolva o JSON completo.` : '');
+      `Tópico: ${topico}\n\nGere o carrossel VALIOSO de EXATAMENTE 8 slides (S1-S8) seguindo os beats, com substância, reframe responsável e CTA forte. Saída: só JSON.` +
+      (lastErr ? `\n\nA tentativa anterior foi REJEITADA por: ${lastErr}\nCorrija EXATAMENTE isso (encurte as linhas que estouraram, mantenha 8 slides) e devolva o JSON completo.` : '');
     const { text } = await chat({
       model: process.env.OPENAI_TEXT_MODEL || 'gpt-4o-mini',
       messages: [{ role: 'system', content: full }, { role: 'user', content: user }],
@@ -133,7 +141,8 @@ export async function gerarRoteiroCarrossel({ topico, maxTentativas = 4 } = {}) 
       temperature: 0.85,
     });
     try {
-      return validar(text);
+      // última tentativa degrada o PISO (aceita linha longa com warn) pra o post nunca falhar
+      return validar(text, { strict: attempt < maxTentativas });
     } catch (e) {
       lastErr = e.message;
       console.warn(`[carrossel] tentativa ${attempt}/${maxTentativas} rejeitada: ${e.message}`);

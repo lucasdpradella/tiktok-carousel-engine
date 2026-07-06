@@ -16,10 +16,11 @@ const M = 96;
 // Estimativa determinística (sem medir DOM): largura média por char relativa ao fontSize (itálico
 // é mais largo). Conservador de propósito (encolhe um tico a mais) pra nunca estourar a margem.
 const AVAIL = CW - 2 * M; // 888px úteis
+const FONT_FLOOR = 50; // piso de legibilidade — nunca encolhe abaixo disso (o roteirista encurta antes)
 function fitSize(text: string, base: number, italic: boolean): number {
   const charW = italic ? 0.56 : 0.52;
   const max = AVAIL / (Math.max(1, text.length) * charW);
-  return Math.min(base, Math.max(46, Math.floor(max)));
+  return Math.min(base, Math.max(FONT_FLOOR, Math.floor(max)));
 }
 
 const titleStyle: React.CSSProperties = {
