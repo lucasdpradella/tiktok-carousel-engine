@@ -55,6 +55,31 @@ export function acharAcaoProibida(txt) {
   return null;
 }
 
+// CUSTO VAGO (briefing-gemini §2, 2026-07-06): afirmação de custo/impacto SEM número é conteúdo
+// raso ("atendimentos emergenciais podem custar muito"). Onde há claim de custo, exige número
+// concreto ilustrativo. Lista estreita pra não dar falso-positivo em linguagem legítima.
+const CUSTO_VAGO = [
+  /\b(custa|custam|custar|custou)\s+(muito|caro|bastante)\b/,
+  /\b(custa|custam|custar)\s+mais caro\b/,
+  /\bsai(r|em)?\s+(muito\s+)?caro\b/,
+  /\bmuito dinheiro\b/,
+  /\bbastante (dinheiro|caro)\b/,
+  /\bum valor (alto|elevado|absurdo)\b/,
+  /\bvalores (altos|elevados|absurdos)\b/,
+  /\bpode(m)? ser muito maior(es)?\b/,
+  /\bmuito car[oa]s?\b/,
+];
+
+/** Retorna o trecho de CUSTO VAGO (claim de custo sem número) ou null. */
+export function acharCustoVago(txt) {
+  const t = String(txt || '').toLowerCase();
+  for (const re of CUSTO_VAGO) {
+    const m = t.match(re);
+    if (m) return m[0];
+  }
+  return null;
+}
+
 // REFRAME IRRESPONSÁVEL (§4 do briefing carrossel-valioso): nunca argumentar CONTRA uma proteção/
 // necessidade básica (plano de saúde, seguro, previdência, reserva) — a casa até VENDE isso.
 // Alvo = o take de má-fé ("desperdício", "paga e não usa", "mau investimento", "não vale a pena ter").

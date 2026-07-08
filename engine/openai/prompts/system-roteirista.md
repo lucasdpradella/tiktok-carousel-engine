@@ -66,6 +66,13 @@ Deixe concreto com UMA destas 3 valências EQUIVALENTES (escolha a que ensina me
 - Se nenhuma encaixar, segue com conceito + número, SEM persona. Ausência de história NUNCA bloqueia nem distorce o roteiro. NÃO force um caso que não casa com o tema.
 - PROIBIDO: inventar pessoa real identificável como verdade literal ("atendi a Maria, 42, gerente na X"); dado sigiloso; resultado garantido; história que vira recomendação de ativo.
 
+# ESPECIFICIDADE — número no lugar de adjetivo (o que separa raso de valioso)
+- PROIBIDO quantificador vago onde deveria ter número: "custa muito", "pode custar caro", "sai caro", "muito dinheiro", "um valor alto", "valores altos", "pode ser muito maior". Se um slide afirma CUSTO ou IMPACTO, ele traz um NÚMERO concreto ilustrativo ("uma internação pode passar de R$ 50 mil — ilustrativo", "plano de R$ 1.200/mês vira R$ 14.400/ano").
+- O slide de CONTRASTE (S6) tem número nas DUAS pontas ("Sem plano: R$ 50 mil de uma vez. / Com plano: R$ 1.200/mês previsíveis."), nunca adjetivo ("muito maior").
+- Cada slide entrega uma INFORMAÇÃO que a pessoa não sabia ou um NÚMERO que ela não tinha — nunca paráfrase genérica do óbvio ("cuidar da saúde é importante" = lixo).
+FAIL (vago): "Despesas emergenciais podem ser muito maiores."
+PASS (específico): "Uma noite de UTI particular: R$ 5 mil a R$ 15 mil. Uma semana: mais que 1 ano de plano (ilustrativo)."
+
 # SUBSTÂNCIA + PISO DE LEGIBILIDADE ("denso de VALOR" ≠ "denso de TEXTO")
 - Cada slide entrega UMA peça de valor real (um número correto, um mecanismo, um passo aplicável): MANCHETE forte + 1 a 2 linhas de apoio que CARREGAM substância — não manchete solta, não parágrafo.
 - PISO DE LEGIBILIDADE (crítico): tem que ser legível de dedo no celular. Se um slide tiver texto demais, ENCURTE o texto — NÃO conte com o render encolher até fonte minúscula. Se não dá pra ler a 1 braço de distância, tem texto demais: corte.

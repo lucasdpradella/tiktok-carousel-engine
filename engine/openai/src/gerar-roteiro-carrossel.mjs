@@ -7,8 +7,8 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chat } from './openai-client.mjs';
-import { acharAcaoProibida, contarNegacoes, acharReframeIrresponsavel } from './compliance-guard.mjs';
+import { chat } from './chat-provider.mjs'; // Gemini (Pro→Flash) com fallback OpenAI
+import { acharAcaoProibida, contarNegacoes, acharReframeIrresponsavel, acharCustoVago } from './compliance-guard.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SYS_PATH = resolve(__dirname, '../prompts/system-roteirista.md');
@@ -92,6 +92,11 @@ function validar(text, { strict = true } = {}) {
     // compliance: bloqueia AÇÃO (recomendação/promessa/timing) na tela do slide
     const txtSlide = [sl.titulo.map((t) => t[0]).join(' '), sl.corpo, (sl.passos || []).join(' '), sl.numero].filter(Boolean).join(' ');
     checarComplianceTexto(txtSlide, `slide ${n}`);
+    // ESPECIFICIDADE: claim de custo sem número = raso. Reprova e o retry pede o número concreto.
+    const vago = acharCustoVago(txtSlide);
+    if (vago) {
+      throw new Error(`slide ${n}: CUSTO VAGO ("${vago}") — troque por um número concreto ILUSTRATIVO (ex: "uma emergência hospitalar pode passar de R$ 50 mil, ilustrativo"). Nada de "custa muito/caro" sem número.`);
+    }
   });
 
   checarComplianceTexto(p.caption, 'caption');
@@ -105,6 +110,12 @@ function validar(text, { strict = true } = {}) {
   }
   if (!s.some((sl) => sl.beat === 'contraste')) {
     throw new Error('falta o BEAT 6: um slide "contraste" concreto (antes vs depois, ou caminho A vs B). Mostre as duas pontas.');
+  }
+  // ESPECIFICIDADE no contraste: as duas pontas com NÚMERO (dígito), não adjetivo ("muito maior").
+  const slContraste = s.find((sl) => sl.beat === 'contraste');
+  const txtContraste = [(slContraste.titulo || []).map((t) => t[0]).join(' '), slContraste.corpo].filter(Boolean).join(' ');
+  if (!/\d/.test(txtContraste)) {
+    throw new Error(`slide contraste: sem NÚMERO — o contraste precisa de número concreto nas pontas (ex: "Sem plano: R$ 50 mil numa emergência. / Com plano: R$ 1.200/mês previsíveis."). Adjetivo ("muito maior") não conta.`);
   }
   const txtTudo =
     s.map((sl) => [(sl.titulo || []).map((t) => t[0]).join(' '), sl.corpo, (sl.passos || []).join(' ')].filter(Boolean).join(' ')).join(' ') +

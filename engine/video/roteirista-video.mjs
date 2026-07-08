@@ -8,8 +8,8 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chat } from '../openai/src/openai-client.mjs';
-import { acharAcaoProibida, contarNegacoes, acharReframeIrresponsavel } from '../openai/src/compliance-guard.mjs';
+import { chat } from '../openai/src/chat-provider.mjs'; // Gemini (Pro→Flash) com fallback OpenAI
+import { acharAcaoProibida, contarNegacoes, acharReframeIrresponsavel, acharCustoVago } from '../openai/src/compliance-guard.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMAS = resolve(__dirname, 'temas-video.json');
@@ -53,6 +53,12 @@ function checarCompliance(c, id) {
   if (irr) {
     throw new Error(`cena ${id}: REFRAME IRRESPONSÁVEL ("${irr}") — NÃO argumente contra proteção/necessidade (plano de saúde, seguro, previdência, reserva). Posicione o VALOR (transferência de risco, custo de NÃO ter, como estruturar bem), nunca "desperdício"/"paga e não usa".`);
   }
+  // ESPECIFICIDADE: claim de custo sem número = raso ("pode custar muito"). Na narração o número
+  // vai por EXTENSO ("cinquenta mil reais"); na tela, em algarismo.
+  const vago = acharCustoVago(txt);
+  if (vago) {
+    throw new Error(`cena ${id}: CUSTO VAGO ("${vago}") — troque por um número concreto ILUSTRATIVO (narração por extenso, ex "pode passar de cinquenta mil reais, só pra ilustrar"). Nada de "custa muito/caro" sem número.`);
+  }
 }
 
 const SYSTEM = `Você é o roteirista do PRADEX (série "Manual do Dinheiro" em VÍDEO faceless, 9:16, ~30s, voz clonada do Lucas Pradella, assessor de investimentos). Cada vídeo é uma MINI-AULA: a pessoa entende um conceito e sai sabendo o que fazer. Tom de planejador sério e humano, anti-influencer (sem "galera", "bora", "PARE TUDO").
@@ -74,6 +80,7 @@ NÃO basta AFIRMAR a tese e esperar que o leitor acredite. FAÇA o leitor ENXERG
 (D) AFIRMOU → PROVE NA FRASE SEGUINTE — toda afirmação de mecanismo ("o real se desvaloriza estruturalmente", "hedge protege") vem IMEDIATAMENTE seguida de exemplo/número/cena que a sustente. Afirmação solta = reprovado.
 (E) GANCHO ANCORADO (beat 1) — abra numa CENA COTIDIANA já vivida (aeroporto, remédio importado, curso do filho fora, boleto que subiu), não no conceito abstrato. O reframe "X não é Y, é Z" vem logo DEPOIS, mas a cena vem PRIMEIRO.
 (F) DOSAGEM = PROCESSO, NÃO NÚMERO — quando o tema pedir "quanto" (quanto em dólar, quanto na reserva), NUNCA responda com percentual/faixa (ex "vinte a quarenta por cento") — é alocação prescritiva, PROIBIDO. Responda com PROCESSO: "quanto exatamente depende do seu perfil e objetivo, é conversa de planejamento, não regra de bolso." Mantém compliant E puxa pro serviço.
+(G) ESPECIFICIDADE — PROIBIDO quantificador vago onde deveria ter número: "custa muito", "pode custar caro", "sai caro", "muito dinheiro", "um valor alto", "pode ser muito maior". Toda afirmação de CUSTO/IMPACTO traz número concreto ilustrativo (na narração POR EXTENSO: "pode passar de cinquenta mil reais, só pra ilustrar"). Cada cena entrega uma informação ou número que a pessoa NÃO tinha — nunca paráfrase genérica do óbvio.
 
 ## EXEMPLOS (siga o PASS, evite o FAIL) — narração em extenso, TTS-safe
 FAIL (vazio, só afirma): "Ter dólar na carteira é reconhecer que a moeda perde valor estruturalmente, não é pessimismo, é realidade histórica."
