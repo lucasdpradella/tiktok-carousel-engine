@@ -26,8 +26,10 @@ on:
         required: false
         default: ''
         type: string
-  schedule:
-    - cron: '0 11 * * 1,5'   # segunda e sexta, 11h UTC = 8h BRT — carrossel no TikTok (2026-07-03)
+  # PAUSADO (2026-07-06): schedule OFF até validar o roteirista no Gemini (§0 briefing-gemini).
+  # Religar após a validação — mesmo cron: seg+sex 11h UTC = 8h BRT.
+  # schedule:
+  #   - cron: '0 11 * * 1,5'
 
 concurrency:
   group: post-carrossel

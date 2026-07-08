@@ -22,8 +22,10 @@ on:
         options:
           - 'true'
           - 'false'
-  schedule:
-    - cron: '0 13 * * 3'   # quarta 13h UTC = 10h BRT — semanal, só-vídeo (Gate 2, 2026-06-30)
+  # PAUSADO (2026-07-06): schedule OFF até validar o roteirista no Gemini (§0 briefing-gemini).
+  # Religar após a validação — mesmo cron: quarta 13h UTC = 10h BRT.
+  # schedule:
+  #   - cron: '0 13 * * 3'
 
 concurrency:
   group: post-video
