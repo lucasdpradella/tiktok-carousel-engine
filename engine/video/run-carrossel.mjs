@@ -135,6 +135,9 @@ async function gerar() {
     await copyFile(j.out, resolve(destDir, j.name));
     photoUrls.push(`${PAGES_BASE}/${postDir}/${j.name}`);
   }
+  // caption junto no Pages: o Lucas abre .../post-carrossel-DATA/caption.txt no celular e cola no app
+  await copyFile(CAPTION, resolve(destDir, 'caption.txt'));
+  console.log(`[carrossel] caption no Pages: ${PAGES_BASE}/${postDir}/caption.txt`);
   await writeFile(MANIFEST, JSON.stringify({ postDir, photoUrls, title, description }, null, 2) + '\n');
   console.log(`[carrossel] ${photoUrls.length} JPEGs staged em docs/${postDir}/ — workflow comita e roda --post`);
 }

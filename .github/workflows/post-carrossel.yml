@@ -26,10 +26,8 @@ on:
         required: false
         default: ''
         type: string
-  # PAUSADO (2026-07-06): schedule OFF até validar o roteirista no Gemini (§0 briefing-gemini).
-  # Religar após a validação — mesmo cron: seg+sex 11h UTC = 8h BRT.
-  # schedule:
-  #   - cron: '0 11 * * 1,5'
+  schedule:
+    - cron: '0 11 * * 1,5'   # seg+sex 11h UTC = 8h BRT — religado 2026-07-08 (Gemini validado)
 
 concurrency:
   group: post-carrossel

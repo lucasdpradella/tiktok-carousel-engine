@@ -161,7 +161,10 @@ async function gerar() {
   const destDir = resolve(DOCS, postDir);
   await mkdir(destDir, { recursive: true });
   await copyFile(MP4, resolve(destDir, 'dinheiro-vaza.mp4'));
+  // caption junto no Pages: o Lucas abre .../post-video-DATA/caption.txt no celular e cola no app
+  await copyFile(CAPTION, resolve(destDir, 'caption.txt'));
   const videoUrl = `${PAGES_BASE}/${postDir}/dinheiro-vaza.mp4`;
+  console.log(`[video] caption no Pages: ${PAGES_BASE}/${postDir}/caption.txt`);
   await writeFile(MANIFEST, JSON.stringify({ postDir, videoUrl, indice: idx }, null, 2) + '\n');
   console.log(`[video] MP4 staged em docs/${postDir}/ — workflow comita e roda --post`);
 }
