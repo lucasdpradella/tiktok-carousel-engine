@@ -72,6 +72,11 @@ async function resolverTopico() {
 
 // ── GERAR ────────────────────────────────────────────────────────────────────
 async function gerar() {
+  // IDEMPOTÊNCIA POR DIA (anti post-duplo): run REAL só 1x por dia (cron + dispatch não colidem).
+  if (!DRY_RUN && existsSync(resolve(DOCS, `post-carrossel-${hoje()}`))) {
+    console.log(`[carrossel] docs/post-carrossel-${hoje()} já existe — post de hoje já saiu. Saindo limpo (anti-duplo).`);
+    return;
+  }
   const topico = await resolverTopico();
   if (!topico) throw new Error('[carrossel] sem tópico (passe TOPICO=... ou argumento)');
   console.log(`[carrossel] tema: "${topico}" (dryRun=${DRY_RUN})`);
@@ -161,6 +166,10 @@ async function esperarPages(url) {
 }
 
 async function postar() {
+  if (!existsSync(MANIFEST)) {
+    console.log('[carrossel] sem manifesto (generate pulou — anti-duplo ou dry-run). Nada a postar, saindo limpo.');
+    return;
+  }
   const m = await lerJSON(MANIFEST);
   const { photoUrls, title, description } = m;
   if (!Array.isArray(photoUrls) || !photoUrls.length) throw new Error('[carrossel] manifesto sem photoUrls — rode o gerar (modo real) antes');

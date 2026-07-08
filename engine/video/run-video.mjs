@@ -82,6 +82,13 @@ function montarCaption(script) {
 
 // ── GENERATE ─────────────────────────────────────────────────────────────────
 async function gerar() {
+  // IDEMPOTÊNCIA POR DIA (2026-07-08, anti post-duplo): se um run REAL já publicou hoje
+  // (docs/post-video-<hoje> existe), sai limpo — evita cron + dispatch manual colidirem no mesmo dia.
+  if (!DRY_RUN && existsSync(resolve(DOCS, `post-video-${hoje()}`))) {
+    console.log(`[video] docs/post-video-${hoje()} já existe — post de hoje já saiu. Saindo limpo (anti-duplo).`);
+    return;
+  }
+
   const temas = await lerJSON(TEMAS);
   const estado = await lerJSON(ESTADO);
   const idx = process.env.INDICE ? parseInt(process.env.INDICE, 10) : estado.indice_atual;
@@ -191,6 +198,10 @@ async function esperarPages(url) {
 }
 
 async function postar() {
+  if (!existsSync(MANIFEST)) {
+    console.log('[video] sem manifesto (generate pulou — anti-duplo ou dry-run). Nada a postar, saindo limpo.');
+    return;
+  }
   const m = await lerJSON(MANIFEST);
   const { videoUrl, indice } = m;
   if (!videoUrl) throw new Error('[video] manifest sem videoUrl — rode o generate (modo real) antes');
