@@ -142,7 +142,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add engine/video/estado-video.json
+          git add engine/video/estado-video.json engine/video/estado-fundos.json
           if git diff --cached --quiet; then
             echo "estado-video sem mudança"
           else
