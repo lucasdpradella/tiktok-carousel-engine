@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { gerarRoteiroCarrossel } from '../openai/src/gerar-roteiro-carrossel.mjs';
 import { gerarFundo } from '../openai/src/gerar-fundo.mjs';
 import { escolherPromptFundo } from '../openai/src/prompts-fundo.mjs';
+import { garantirHashtags } from '../openai/src/hashtags.mjs';
 import { refreshAccessToken, postarTikTokInbox, getPostStatus, montarTextos } from '../openai/src/postar.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -126,8 +127,10 @@ async function gerar() {
 
   // caption sugerida sempre (carrossel: a API de foto aceita title/description; mantemos a caption)
   const { title, description } = montarTextos({ caption: captionComCtaTravado(script.caption), hashtags: script.hashtags });
+  // hashtags obrigatórias do Squad XP travadas por código (dedupe) — inbox TikTok, Pages e IG herdam
+  const descricaoFinal = garantirHashtags(description).trimEnd();
   await mkdir(VIDEO_OUT, { recursive: true });
-  await writeFile(CAPTION, `${title}\n\n${description}\n`);
+  await writeFile(CAPTION, `${title}\n\n${descricaoFinal}\n`);
 
   if (DRY_RUN) {
     console.log(`[carrossel] DRY_RUN=true → ${jpgs.length} JPEGs em ${JPG_OUT}. NÃO posta, NÃO stage docs.`);
@@ -147,7 +150,7 @@ async function gerar() {
   // caption junto no Pages: o Lucas abre .../post-carrossel-DATA/caption.txt no celular e cola no app
   await copyFile(CAPTION, resolve(destDir, 'caption.txt'));
   console.log(`[carrossel] caption no Pages: ${PAGES_BASE}/${postDir}/caption.txt`);
-  await writeFile(MANIFEST, JSON.stringify({ postDir, photoUrls, title, description }, null, 2) + '\n');
+  await writeFile(MANIFEST, JSON.stringify({ postDir, photoUrls, title, description: descricaoFinal }, null, 2) + '\n');
   console.log(`[carrossel] ${photoUrls.length} JPEGs staged em docs/${postDir}/ — workflow comita e roda --post`);
 }
 

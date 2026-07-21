@@ -17,6 +17,7 @@ import { gerarScriptVideo } from './roteirista-video.mjs';
 import { sanitizeNarracao } from './sanitize-narracao.mjs';
 import { gerarFundo } from '../openai/src/gerar-fundo.mjs';
 import { escolherPromptFundo } from '../openai/src/prompts-fundo.mjs';
+import { garantirHashtags } from '../openai/src/hashtags.mjs';
 import { refreshAccessToken, postarVideoInbox, getPostStatus } from '../openai/src/postar.mjs';
 
 // colapsa 3+ letras idênticas seguidas -> 2 (typo de TELA, ex "descorrrelacionado"). Não toca dígitos.
@@ -158,7 +159,8 @@ async function gerar() {
   console.log(`[video] MP4 no pace final ${PACE}x (voz natural via atempo) — Lucas posta o arquivo direto, sem acelerar no app`);
 
   // caption sugerida (sempre — o Lucas cola no app ao finalizar)
-  await writeFile(CAPTION, montarCaption(script));
+  // hashtags obrigatórias do Squad XP travadas por código (dedupe embutido) — TikTok e IG herdam
+  await writeFile(CAPTION, garantirHashtags(montarCaption(script)));
 
   if (DRY_RUN) {
     console.log('[video] DRY_RUN=true → MP4 no artifact. NÃO posta, NÃO avança, NÃO faz stage em docs/.');
