@@ -2,110 +2,137 @@
   {
     "tema": "Seu dinheiro não some, ele vaza",
     "resumo": "Gastos pequenos invisíveis (delivery, assinatura, cafezinho) que somam no mês. Gancho do vazamento.",
-    "piloto": true
+    "piloto": true,
+    "categoria": "comportamento"
   },
   {
     "tema": "Por que você termina o mês no zero (mesmo ganhando bem)",
-    "resumo": "Não é quanto entra, é a falta de visão do que sai. Hábito de enxergar."
+    "resumo": "Não é quanto entra, é a falta de visão do que sai. Hábito de enxergar.",
+    "categoria": "comportamento"
   },
   {
     "tema": "Viés de confirmação: o erro que todo investidor comete e ninguém admite",
-    "resumo": "Só enxergar o que confirma a própria crença e ignorar o resto. Antídoto: buscar e ler a tese contrária antes de decidir."
+    "resumo": "Só enxergar o que confirma a própria crença e ignorar o resto. Antídoto: buscar e ler a tese contrária antes de decidir.",
+    "categoria": "comportamento"
   },
   {
     "tema": "O que move o dólar (e por que ninguém consegue prever)",
-    "resumo": "Juros, fluxo de capital e percepção de risco movem o câmbio. Conceito de como funciona, nunca palpite de direção ou timing."
+    "resumo": "Juros, fluxo de capital e percepção de risco movem o câmbio. Conceito de como funciona, nunca palpite de direção ou timing.",
+    "categoria": "mercado"
   },
   {
     "tema": "Plano de saúde não é gasto, é patrimônio negativo em formação",
-    "resumo": "Reframe: o custo de saúde cresce com a idade e vira passivo futuro. Planejar esse custo, não tratar como despesa solta."
+    "resumo": "Reframe: o custo de saúde cresce com a idade e vira passivo futuro. Planejar esse custo, não tratar como despesa solta.",
+    "categoria": "saude"
   },
   {
     "tema": "O que é a Selic e por que ela mexe na sua vida",
-    "resumo": "A taxa básica de juros e como ela se espalha por crédito, renda fixa e consumo no dia a dia. Mecanismo, não recomendação."
+    "resumo": "A taxa básica de juros e como ela se espalha por crédito, renda fixa e consumo no dia a dia. Mecanismo, não recomendação.",
+    "categoria": "mercado"
   },
   {
     "tema": "Dólar não é aposta, é estrutura",
-    "resumo": "Reframe: dólar como proteção e descorrelação do patrimônio, não tentativa de adivinhar a cotação."
+    "resumo": "Reframe: dólar como proteção e descorrelação do patrimônio, não tentativa de adivinhar a cotação.",
+    "categoria": "investimento"
   },
   {
     "tema": "Por que os juros sobem e descem",
-    "resumo": "Política monetária reagindo à inflação, em linguagem simples. O mecanismo por trás, não a previsão de para onde vão."
+    "resumo": "Política monetária reagindo à inflação, em linguagem simples. O mecanismo por trás, não a previsão de para onde vão.",
+    "categoria": "mercado"
   },
   {
     "tema": "Risco e retorno: por que não existe rendimento alto sem risco escondido",
-    "resumo": "A relação básica entre risco e retorno. Onde o retorno alto se paga, sem citar ativo ou ticker."
+    "resumo": "A relação básica entre risco e retorno. Onde o retorno alto se paga, sem citar ativo ou ticker.",
+    "categoria": "investimento"
   },
   {
     "tema": "O que é o CDI e por que todo investimento se compara a ele",
-    "resumo": "O benchmark do dia a dia: o que é o CDI e por que virou a régua dos investimentos. Conceito, não indicação."
+    "resumo": "O benchmark do dia a dia: o que é o CDI e por que virou a régua dos investimentos. Conceito, não indicação.",
+    "categoria": "mercado"
   },
   {
     "tema": "Juros compostos não é mágica, é tempo",
-    "resumo": "Reframe: o motor dos juros compostos é o prazo, não a taxa. Tempo como a variável principal."
+    "resumo": "Reframe: o motor dos juros compostos é o prazo, não a taxa. Tempo como a variável principal.",
+    "categoria": "investimento"
   },
   {
     "tema": "Marcação a mercado: por que a renda fixa também oscila",
-    "resumo": "Por que um título de renda fixa varia de preço no caminho. Desmonta o mito de que renda fixa nunca cai."
+    "resumo": "Por que um título de renda fixa varia de preço no caminho. Desmonta o mito de que renda fixa nunca cai.",
+    "categoria": "mercado"
   },
   {
     "tema": "Aversão à perda: por que segurar o que cai dói menos que admitir o erro",
-    "resumo": "O cérebro evita a dor de realizar a perda e segura o que cai. Definir a regra de saída antes da emoção."
+    "resumo": "O cérebro evita a dor de realizar a perda e segura o que cai. Definir a regra de saída antes da emoção.",
+    "categoria": "comportamento"
   },
   {
     "tema": "Como a bolsa precifica uma empresa",
-    "resumo": "Lucro, expectativa e risco formam o preço de uma ação. Conceito de valuation, sem indicar nenhum papel."
+    "resumo": "Lucro, expectativa e risco formam o preço de uma ação. Conceito de valuation, sem indicar nenhum papel.",
+    "categoria": "mercado"
   },
   {
     "tema": "Aposentadoria não é idade, é independência",
-    "resumo": "Reframe: a meta é cobrir o custo de vida sem depender do salário, não chegar numa idade específica."
+    "resumo": "Reframe: a meta é cobrir o custo de vida sem depender do salário, não chegar numa idade específica.",
+    "categoria": "aposentadoria"
   },
   {
     "tema": "PIB, juro e inflação: o tripé que move a economia",
-    "resumo": "Como as três peças se puxam e movem a economia. Entender o jogo, não prever o próximo número."
+    "resumo": "Como as três peças se puxam e movem a economia. Entender o jogo, não prever o próximo número.",
+    "categoria": "mercado"
   },
   {
     "tema": "Diversificação de verdade não é ter muitos ativos, é ter ativos que não andam juntos",
-    "resumo": "Reframe: diversificar é descorrelação (riscos diferentes), não acumular produtos parecidos."
+    "resumo": "Reframe: diversificar é descorrelação (riscos diferentes), não acumular produtos parecidos.",
+    "categoria": "investimento"
   },
   {
     "tema": "O que é liquidez e por que ela importa mais do que parece",
-    "resumo": "Poder sair quando precisa: o que é liquidez e por que ela pesa tanto numa decisão. Conceito de estrutura."
+    "resumo": "Poder sair quando precisa: o que é liquidez e por que ela pesa tanto numa decisão. Conceito de estrutura.",
+    "categoria": "investimento"
   },
   {
     "tema": "Renda fixa não é sem risco, é risco diferente",
-    "resumo": "Reframe: renda fixa tem risco diferente (marcação a mercado, crédito, inflação). Entender o risco, não fugir dele."
+    "resumo": "Reframe: renda fixa tem risco diferente (marcação a mercado, crédito, inflação). Entender o risco, não fugir dele.",
+    "categoria": "investimento"
   },
   {
     "tema": "Ciclos econômicos: por que a economia anda em ondas",
-    "resumo": "Expansão e retração se alternam. O que os ciclos ensinam sobre paciência e horizonte, sem prever o próximo."
+    "resumo": "Expansão e retração se alternam. O que os ciclos ensinam sobre paciência e horizonte, sem prever o próximo.",
+    "categoria": "mercado"
   },
   {
     "tema": "Inflação não é vilã distante, é imposto invisível",
-    "resumo": "Reframe: a inflação corrói o poder de compra do dinheiro parado, como um imposto silencioso."
+    "resumo": "Reframe: a inflação corrói o poder de compra do dinheiro parado, como um imposto silencioso.",
+    "categoria": "mercado"
   },
   {
     "tema": "Prêmio de risco: por que te pagam mais pra correr mais risco",
-    "resumo": "A lógica por trás de todo retorno: o prêmio que existe pra compensar o risco assumido."
+    "resumo": "A lógica por trás de todo retorno: o prêmio que existe pra compensar o risco assumido.",
+    "categoria": "investimento"
   },
   {
     "tema": "Efeito manada: quando todo mundo está comprando, qual pergunta você devia fazer",
-    "resumo": "Decidir pela multidão vs ter critério próprio. A pergunta a se fazer quando todos correm pro mesmo lado."
+    "resumo": "Decidir pela multidão vs ter critério próprio. A pergunta a se fazer quando todos correm pro mesmo lado.",
+    "categoria": "comportamento"
   },
   {
     "tema": "Offshore não é evasão, é diversificação de jurisdição",
-    "resumo": "Reframe: offshore como diversificação de jurisdição e proteção patrimonial. Conceito de estrutura, nunca 'faça isso'."
+    "resumo": "Reframe: offshore como diversificação de jurisdição e proteção patrimonial. Conceito de estrutura, nunca 'faça isso'.",
+    "categoria": "investimento"
   },
   {
     "tema": "Reserva de emergência: o erro de deixar junto com o resto do dinheiro",
-    "resumo": "Separar a reserva pra não gastar sem perceber. Organização e função (liquidez/segurança), não escolha de produto."
+    "resumo": "Separar a reserva pra não gastar sem perceber. Organização e função (liquidez/segurança), não escolha de produto.",
+    "categoria": "planejamento"
   },
   {
     "tema": "O que dá pra aprender com fundos de pensão",
-    "resumo": "Horizonte longo, disciplina e descorrelação dos grandes institucionais. O comportamento, não os ativos deles."
+    "resumo": "Horizonte longo, disciplina e descorrelação dos grandes institucionais. O comportamento, não os ativos deles.",
+    "categoria": "aposentadoria"
   },
   {
     "tema": "Custo de oportunidade: o dinheiro parado também tem preço",
-    "resumo": "O que você deixa de ganhar é um custo invisível em toda decisão. Pensar no trade-off, não no que fazer agora."
+    "resumo": "O que você deixa de ganhar é um custo invisível em toda decisão. Pensar no trade-off, não no que fazer agora.",
+    "categoria": "comportamento"
   }
 ]

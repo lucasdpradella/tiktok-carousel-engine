@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { gerarScriptVideo } from './roteirista-video.mjs';
 import { sanitizeNarracao } from './sanitize-narracao.mjs';
 import { gerarFundo } from '../openai/src/gerar-fundo.mjs';
+import { escolherPromptFundo } from '../openai/src/prompts-fundo.mjs';
 import { refreshAccessToken, postarVideoInbox, getPostStatus } from '../openai/src/postar.mjs';
 
 // colapsa 3+ letras idênticas seguidas -> 2 (typo de TELA, ex "descorrrelacionado"). Não toca dígitos.
@@ -108,14 +109,16 @@ async function gerar() {
     normalizarTela(c);
   }
 
-  // Fase 2: fundo fotográfico POR-RUN. Gera (cache) e liga 'foto' SÓ neste run (defaults
-  // committados ficam em 'solido'). Se falhar, segue no marinho sólido (degradação graciosa).
+  // Fundo automático POR POST (Nano Banana, 2026-07-19): prompt casado com a categoria do tema,
+  // rodízio de variações (dry-run não gasta o rodízio). Se falhar (quota/timeout/sem key),
+  // segue no marinho sólido — o post NUNCA deixa de sair pelo fundo.
   try {
+    const { prompt, id } = escolherPromptFundo({ categoria: t.categoria, persistir: !DRY_RUN });
     const bgRel = `bg/video-${hoje()}.png`;
-    await gerarFundo({ outPath: resolve(REMOTION, 'public', bgRel) });
+    await gerarFundo({ outPath: resolve(REMOTION, 'public', bgRel), prompt, aspectRatio: '9:16' });
     script.bg = bgRel;
     script.bgMode = 'foto';
-    console.log(`[video] fundo fotográfico ligado neste run: ${bgRel}`);
+    console.log(`[video] fundo nano banana ligado: ${bgRel} (prompt ${id}, categoria ${t.categoria || 'generico'})`);
   } catch (e) {
     console.warn('[video] fundo falhou — segue no marinho sólido:', e.message);
   }

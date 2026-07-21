@@ -15,6 +15,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gerarRoteiroCarrossel } from '../openai/src/gerar-roteiro-carrossel.mjs';
 import { gerarFundo } from '../openai/src/gerar-fundo.mjs';
+import { escolherPromptFundo } from '../openai/src/prompts-fundo.mjs';
 import { refreshAccessToken, postarTikTokInbox, getPostStatus, montarTextos } from '../openai/src/postar.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -59,15 +60,16 @@ function run(cmd, args, opts = {}) {
   });
 }
 
-// tema: env TOPICO / argv (após flags) / fila temas-video.json[estado-carrossel.indice_atual]
+// tema: env TOPICO / argv (após flags) / fila temas-carrossel.json[estado-carrossel.indice_atual]
+// devolve também a CATEGORIA (pro fundo): da fila, ou env CATEGORIA p/ tópico custom (senão generico).
 async function resolverTopico() {
   const arg = process.argv.slice(2).find((a) => !a.startsWith('--'));
-  if (process.env.TOPICO) return process.env.TOPICO;
-  if (arg) return arg;
+  const custom = process.env.TOPICO || arg;
+  if (custom) return { topico: custom, categoria: process.env.CATEGORIA || 'generico' };
   const temas = await lerJSON(TEMAS);
   const raw = existsSync(ESTADO) ? (await lerJSON(ESTADO)).indice_atual : 0;
   const idx = ((raw % temas.length) + temas.length) % temas.length; // wrap circular na fila
-  return temas[idx]?.tema;
+  return { topico: temas[idx]?.tema, categoria: temas[idx]?.categoria || 'generico' };
 }
 
 // ── GERAR ────────────────────────────────────────────────────────────────────
@@ -77,21 +79,23 @@ async function gerar() {
     console.log(`[carrossel] docs/post-carrossel-${hoje()} já existe — post de hoje já saiu. Saindo limpo (anti-duplo).`);
     return;
   }
-  const topico = await resolverTopico();
+  const { topico, categoria } = await resolverTopico();
   if (!topico) throw new Error('[carrossel] sem tópico (passe TOPICO=... ou argumento)');
-  console.log(`[carrossel] tema: "${topico}" (dryRun=${DRY_RUN})`);
+  console.log(`[carrossel] tema: "${topico}" (categoria=${categoria}, dryRun=${DRY_RUN})`);
 
   // 1. roteiro multi-slide (validador de caractere + compliance + CTA travada já embutidos)
   const script = await gerarRoteiroCarrossel({ topico });
   console.log(`[carrossel] roteiro: ${script.slides.length} slides`);
 
-  // 2. fundo fotográfico por-run (liga 'foto' só neste run; fallback sólido se falhar)
+  // 2. fundo automático POR POST (Nano Banana): prompt pela categoria do tema, rodízio de
+  // variações (dry-run não gasta), 4:5. Falhou (quota/sem key)? Sólido marinho — nunca quebra.
   try {
+    const { prompt, id } = escolherPromptFundo({ categoria, persistir: !DRY_RUN });
     const bgRel = `bg/carrossel-${hoje()}.png`;
-    await gerarFundo({ outPath: resolve(REMOTION, 'public', bgRel) });
+    await gerarFundo({ outPath: resolve(REMOTION, 'public', bgRel), prompt, aspectRatio: '4:5' });
     script.bg = bgRel;
     script.bgMode = 'foto';
-    console.log(`[carrossel] fundo ligado: ${bgRel}`);
+    console.log(`[carrossel] fundo nano banana ligado: ${bgRel} (prompt ${id}, categoria ${categoria})`);
   } catch (e) {
     console.warn('[carrossel] fundo falhou — segue no marinho sólido:', e.message);
   }

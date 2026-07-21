@@ -11,9 +11,10 @@ export const C = {
 export const SERIF = 'Lora'; // títulos (serifada elegante)
 export const SANS = 'Poppins'; // corpo / labels
 
-// Fase 2: fundo fotográfico (gpt-image-1) sob o texto. 'foto' = usa a imagem (se houver) + scrim;
-// 'solido' = marinho liso (comportamento atual). Kill-switch reversível. Sem imagem → cai no sólido.
-export const BG_MODE: 'foto' | 'solido' = 'solido';
+// Fundo fotográfico (Nano Banana, por post) sob o texto. 'foto' = usa a imagem (se houver) + scrim;
+// 'solido' = marinho liso. Kill-switch reversível (voltar pra 'solido' mata a foto sem quebrar).
+// LIGADO por default em 2026-07-19 (briefing fundo automático). Sem imagem → cai no sólido sozinho.
+export const BG_MODE: 'foto' | 'solido' = 'foto';
 
 export const W = 1080;
 export const H = 1920;
