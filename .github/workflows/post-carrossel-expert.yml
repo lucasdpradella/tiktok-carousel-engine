@@ -1,0 +1,75 @@
+name: post-carrossel-expert
+
+# Carrosséis PRÉ-PRONTOS da Expert XP 2026 (A/B/C) — assets finais já commitados em
+# docs/post-carrossel-expert-{a,b,c}/ (8 JPEG 1080×1350 + caption.txt).
+# NÃO usa o gerador (roteirista/Gemini/Remotion), NÃO toca estado-carrossel.json,
+# NÃO mexe no post-video.yml (vídeo de quarta 10h segue normal).
+#
+# Agenda (BRT): A = manual (2026-07-28) · B = qua 2026-07-29 08:30 · C = qui 2026-07-30 08:30.
+# Crons DATADOS (só disparam nesses dias); depois de rodarem, este workflow pode ser aposentado.
+# IG_CROSSPOST=on AQUI (exceção Expert, decisão Lucas 2026-07-28): IG full-auto + TikTok inbox.
+
+on:
+  workflow_dispatch:
+    inputs:
+      carrossel:
+        description: 'Qual carrossel (a=Gestores/CDI, b=FII cota, c=FII papel/tijolo)'
+        required: true
+        type: choice
+        options: ['a', 'b', 'c']
+      dry_run:
+        description: 'Dry run (valida Pages+caption, não posta) — default TRUE'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+  schedule:
+    - cron: '30 11 29 7 *'   # qua 2026-07-29 08:30 BRT → Carrossel B
+    - cron: '30 11 30 7 *'   # qui 2026-07-30 08:30 BRT → Carrossel C
+
+concurrency:
+  group: post-carrossel-expert
+  cancel-in-progress: false
+
+permissions:
+  contents: read   # não commita nada (assets já estão no Pages)
+
+jobs:
+  expert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+      TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+      IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      IG_CROSSPOST: 'on'
+      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run || 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Resolver qual carrossel
+        id: qual
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            DIA=$(date -u +%d)
+            case "$DIA" in
+              29) echo "carrossel=b" >> "$GITHUB_OUTPUT" ;;
+              30) echo "carrossel=c" >> "$GITHUB_OUTPUT" ;;
+              *) echo "cron fora das datas previstas (dia $DIA) — abortando"; exit 1 ;;
+            esac
+          else
+            echo "carrossel=${{ inputs.carrossel }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publicar carrossel Expert (TikTok inbox + IG)
+        env:
+          CARROSSEL: ${{ steps.qual.outputs.carrossel }}
+        run: node engine/video/run-carrossel-expert.mjs
