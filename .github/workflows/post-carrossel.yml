@@ -4,7 +4,7 @@ name: post-carrossel
 #
 # Cadência (2026-07-03): grade semanal — carrossel seg+sex, vídeo qua (post-video.yml). Alterna
 # carrossel→vídeo→carrossel na semana. O PIL antigo (post-tiktok.yml) segue aposentado.
-# IG cross-post OFF aqui — o Instagram recebe só o vídeo de quarta.
+# IG cross-post LIGADO no cron desde 2026-08-01 (antes era só o vídeo de quarta que espelhava).
 #
 # Modos:
 #   dry_run=true  (default) → GATE: gera roteiro + fundo + render N JPEG → sobe como artifact. Não posta.
@@ -27,7 +27,7 @@ on:
         default: ''
         type: string
       ig_crosspost:
-        description: 'Espelhar no Instagram (só dispatch manual; o cron continua HARD off)'
+        description: 'Espelhar no Instagram neste run (o cron usa a variable IG_CROSSPOST_CARROSSEL, default on)'
         required: false
         default: 'off'
         type: choice
@@ -55,10 +55,15 @@ jobs:
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run || 'true' }}
       TOPICO: ${{ inputs.topico }}
-      # Cross-post IG (full-auto, isolado). O CRON continua HARD off — carrossel automático
-      # nunca espelha no IG. Só um dispatch manual pode ligar, via o input ig_crosspost
-      # (posts pré-prontos curados, tipo os da Expert, que o Lucas quer nos dois canais).
-      IG_CROSSPOST: ${{ github.event_name == 'schedule' && 'off' || inputs.ig_crosspost || 'off' }}
+      # Cross-post IG (full-auto, isolado). DECISÃO LUCAS 2026-08-01: o carrossel do CRON passa
+      # a espelhar no IG também (era hard off; o IG só recebia o vídeo de quarta). Vale de seg
+      # 03/08 em diante, toda segunda e sexta — não só uma vez.
+      #   dispatch manual → manda o input ig_crosspost (default 'off', escolha explícita por run)
+      #   cron            → repo VARIABLE IG_CROSSPOST_CARROSSEL; sem ela, 'on'.
+      # Kill-switch sem commit: criar a variable IG_CROSSPOST_CARROSSEL=off em Settings →
+      # Secrets and variables → Actions → Variables. O cross-post segue isolado (continue-on-error
+      # + exit 0 interno): se o IG falhar, o post do TikTok não cai junto.
+      IG_CROSSPOST: ${{ inputs.ig_crosspost || vars.IG_CROSSPOST_CARROSSEL || 'on' }}
       IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
       IG_USER_ID: ${{ secrets.IG_USER_ID }}
       IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
