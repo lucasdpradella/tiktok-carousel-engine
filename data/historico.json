@@ -288,5 +288,14 @@
     "origem": "fila-auto",
     "run_id": "30632052786",
     "indice": 0
+  },
+  {
+    "data": "2026-08-01",
+    "tipo": "carrossel",
+    "tema": "O seu plano tem plano B (caso de cliente)",
+    "categoria": "planejamento",
+    "slug": "plano-plano-caso-cliente",
+    "origem": "pauta-curada",
+    "run_id": "30702342098"
   }
 ]

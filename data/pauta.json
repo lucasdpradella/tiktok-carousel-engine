@@ -6,9 +6,10 @@
     "categoria": "planejamento",
     "assets": "docs/post-carrossel-manual-2026-08-01",
     "agendar": "2026-08-01",
-    "status": "pendente",
+    "status": "postado",
     "origem": "cowork",
-    "obs": "POSTAR HOJE, off-grade, via workflow_dispatch (sabado nao tem cron). 8 slides 1080x1350 JPEG q92 + caption.txt prontos, template unico Templates/carrossel-lp tema azul. NAO passar pelo roteirista/Gemini, NAO regerar arte, NAO tocar estado-carrossel.json. Caso de cliente anonimizado, sem numero de rentabilidade."
+    "obs": "POSTAR HOJE, off-grade, via workflow_dispatch (sabado nao tem cron). 8 slides 1080x1350 JPEG q92 + caption.txt prontos, template unico Templates/carrossel-lp tema azul. NAO passar pelo roteirista/Gemini, NAO regerar arte, NAO tocar estado-carrossel.json. Caso de cliente anonimizado, sem numero de rentabilidade.",
+    "postado_em": "2026-08-01"
   },
   {
     "id": "2026-08-03-clareza-nao-renda",
