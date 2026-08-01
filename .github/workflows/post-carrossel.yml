@@ -26,6 +26,14 @@ on:
         required: false
         default: ''
         type: string
+      ig_crosspost:
+        description: 'Espelhar no Instagram (só dispatch manual; o cron continua HARD off)'
+        required: false
+        default: 'off'
+        type: choice
+        options:
+          - 'off'
+          - 'on'
   schedule:
     - cron: '0 11 * * 1,5'   # seg+sex 11h UTC = 8h BRT — religado 2026-07-08 (Gemini validado)
 
@@ -47,8 +55,10 @@ jobs:
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run || 'true' }}
       TOPICO: ${{ inputs.topico }}
-      # Cross-post IG (full-auto, isolado). Kill-switch via repo VARIABLE — flipar sem commit.
-      IG_CROSSPOST: 'off'   # HARD off: carrossel NUNCA espelha no IG (só o vídeo semanal cross-posta)
+      # Cross-post IG (full-auto, isolado). O CRON continua HARD off — carrossel automático
+      # nunca espelha no IG. Só um dispatch manual pode ligar, via o input ig_crosspost
+      # (posts pré-prontos curados, tipo os da Expert, que o Lucas quer nos dois canais).
+      IG_CROSSPOST: ${{ github.event_name == 'schedule' && 'off' || inputs.ig_crosspost || 'off' }}
       IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
       IG_USER_ID: ${{ secrets.IG_USER_ID }}
       IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}

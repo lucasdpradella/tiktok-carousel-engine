@@ -115,7 +115,11 @@ async function prepararPrePronto(item) {
 
   console.log(`[carrossel] PRÉ-PRONTO "${item.id}" — ${photoUrls.length} slides de ${item.assets} (nada é gerado)`);
   await mkdir(VIDEO_OUT, { recursive: true });
-  await writeFile(CAPTION, `${title}\n\n${descricaoFinal}\n`);
+  // caption.txt = a caption CRUA (só com as hashtags garantidas). É este arquivo que o
+  // cross-post-ig.mjs publica verbatim no Instagram; escrever `title + description` aqui faria
+  // o post do IG abrir com a primeira frase repetida (title é um prefixo truncado da caption).
+  // O TikTok não usa este arquivo — ele lê title/description do manifesto.
+  await writeFile(CAPTION, descricaoFinal + '\n');
   await writeFile(
     MANIFEST,
     JSON.stringify(
