@@ -19,6 +19,8 @@ import { gerarFundo } from '../openai/src/gerar-fundo.mjs';
 import { escolherPromptFundo } from '../openai/src/prompts-fundo.mjs';
 import { garantirHashtags } from '../openai/src/hashtags.mjs';
 import { refreshAccessToken, postarVideoInbox, getPostStatus } from '../openai/src/postar.mjs';
+import { lerHistorico, registrarPost, checarCandidato, primeiroElegivel, jaPostouEm, REGRAS_CURADO } from './anti-repeticao.mjs';
+import { lerPauta, proximoPendente, marcarItem, lerAssets, lerCaption, escreverStatusFila } from './pauta.mjs';
 
 // colapsa 3+ letras idênticas seguidas -> 2 (typo de TELA, ex "descorrrelacionado"). Não toca dígitos.
 const colapsa = (s) => (typeof s === 'string' ? s.replace(/([A-Za-zÀ-ÿ])\1{2,}/g, '$1$1') : s);
@@ -84,25 +86,97 @@ function montarCaption(script) {
 
 // ── GENERATE ─────────────────────────────────────────────────────────────────
 async function gerar() {
-  // IDEMPOTÊNCIA POR DIA (2026-07-08, anti post-duplo): se um run REAL já publicou hoje
-  // (docs/post-video-<hoje> existe), sai limpo — evita cron + dispatch manual colidirem no mesmo dia.
+  // IDEMPOTÊNCIA POR DIA (2026-07-08, anti post-duplo): evita cron + dispatch manual colidirem
+  // no mesmo dia. Agora pelo HISTÓRICO — a checagem por pasta bloquearia um pré-pronto cuja
+  // pasta de assets casasse com a data do dia; ela virou guarda do caminho GERADO (é ele que
+  // cria docs/post-video-<hoje>), lá no gerarComRoteirista.
+  const historico = await lerHistorico();
+  if (!DRY_RUN && jaPostouEm(historico, { data: hoje(), tipo: 'video' })) {
+    console.log(`[video] histórico já tem vídeo de ${hoje()} — post de hoje já saiu. Saindo limpo (anti-duplo).`);
+    return;
+  }
+
+  // 1º a FILA CURADA (data/pauta.json). O roteirista automático é RESERVA.
+  const pauta = await lerPauta();
+  const item = proximoPendente(pauta, 'video', hoje());
+
+  if (item) {
+    // Item aprovado na mão pelo Lucas → só a regra do slug (não repetir o que já saiu).
+    const { ok, motivo } = checarCandidato({ tema: item.tema, categoria: item.categoria }, historico, { regras: REGRAS_CURADO });
+    if (!ok) {
+      console.log(`::warning::[trava] pauta "${item.id}" BLOQUEADA — ${motivo}`);
+      if (!DRY_RUN) await marcarItem(item.id, 'bloqueado', { motivo });
+      console.log('[video] item curado marcado como bloqueado. Saindo limpo, nada postado.');
+      return;
+    }
+    if (item.assets) {
+      // PRÉ-PRONTO: publica o MP4 + caption.txt da pasta como estão. Sem roteirista, sem XTTS,
+      // sem Remotion, sem ffmpeg — os assets já vêm no pace final e já estão no Pages.
+      const { postDir, arquivos, capPath, tipoAsset } = lerAssets(item.assets);
+      if (tipoAsset !== 'video') throw new Error(`[video] ${item.assets} não tem MP4 — isso é pauta de carrossel`);
+      if (DRY_RUN) {
+        console.log(`[video] DRY_RUN + PRÉ-PRONTO "${item.id}": publicaria ${arquivos[0]} de ${item.assets}. Nada gerado, nada postado.`);
+        return;
+      }
+      const caption = garantirHashtags(await lerCaption(capPath));
+      await mkdir(VIDEO_OUT, { recursive: true });
+      await writeFile(CAPTION, caption.endsWith('\n') ? caption : caption + '\n');
+      const videoUrl = `${PAGES_BASE}/${postDir}/${arquivos[0]}`;
+      await writeFile(
+        MANIFEST,
+        JSON.stringify({ postDir, videoUrl, origem: 'pauta-curada', pautaId: item.id, tema: item.tema, categoria: item.categoria, indice: null }, null, 2) + '\n',
+      );
+      console.log(`[video] PRÉ-PRONTO "${item.id}" — ${videoUrl} (nada é gerado)`);
+      return;
+    }
+    console.log(`[video] pauta curada "${item.id}" (sem assets) → roteirista escreve sobre o tema dado`);
+    return gerarComRoteirista({
+      tema: item.tema,
+      resumo: item.resumo || '',
+      categoria: item.categoria || 'generico',
+      origem: 'pauta-curada',
+      pautaId: item.id,
+      idx: null,
+    });
+  }
+
+  // fila curada vazia → roteirista automático COM A TRAVA VALENDO.
+  console.log('[video] fila curada vazia → caindo na reserva (temas-video.json) com a trava ligada');
+  const temas = await lerJSON(TEMAS);
+  const estado = await lerJSON(ESTADO);
+  const desde = process.env.INDICE ? parseInt(process.env.INDICE, 10) : estado.indice_atual;
+  // a fila NÃO rebobina (o wrap circular foi o que repetiu o dólar no carrossel de 31/07)
+  if (desde >= temas.length) {
+    console.log(`::warning::[video] fila de reserva acabou (idx ${desde} >= ${temas.length} temas). Saindo limpo.`);
+    return;
+  }
+  // pula os bloqueados pela trava e pega o primeiro elegível
+  const { item: t, indice: idx } = primeiroElegivel(temas, historico, { desde, rotulo: 'reserva-video' });
+  if (!t) {
+    console.log('[video] nenhum tema elegível — a trava bloqueou todos. Saindo limpo, NADA POSTADO.');
+    return;
+  }
+  return gerarComRoteirista({
+    tema: t.tema,
+    resumo: t.resumo,
+    categoria: t.categoria || 'generico',
+    origem: 'fila-auto',
+    pautaId: null,
+    idx,
+  });
+}
+
+// gera o vídeo de fato (roteiro → voz XTTS → render Remotion → ffmpeg pace → stage docs)
+async function gerarComRoteirista({ tema, resumo, categoria, origem, pautaId, idx }) {
+  // anti-duplo do caminho GERADO: é este que faz stage em docs/post-video-<hoje>.
   if (!DRY_RUN && existsSync(resolve(DOCS, `post-video-${hoje()}`))) {
     console.log(`[video] docs/post-video-${hoje()} já existe — post de hoje já saiu. Saindo limpo (anti-duplo).`);
     return;
   }
-
-  const temas = await lerJSON(TEMAS);
-  const estado = await lerJSON(ESTADO);
-  const idx = process.env.INDICE ? parseInt(process.env.INDICE, 10) : estado.indice_atual;
-  const t = temas[idx];
-  if (!t) {
-    console.log(`[video] fila acabou (idx ${idx} >= ${temas.length} temas). Saindo limpo.`);
-    return;
-  }
-  console.log(`[video] tema #${idx}: "${t.tema}" (dryRun=${DRY_RUN}, modoSemanal=${MODO_SEMANAL})`);
+  console.log(`[video] tema #${idx ?? '-'}: "${tema}" (categoria=${categoria}, origem=${origem}, dryRun=${DRY_RUN}, modoSemanal=${MODO_SEMANAL})`);
 
   // 1. roteiro → script.json (onde o Remotion lê) + cópia pro artifact
-  const script = await gerarScriptVideo({ tema: t.tema, resumo: t.resumo });
+  const script = await gerarScriptVideo({ tema, resumo });
   // sanitiza a NARRAÇÃO por código antes do TTS (XTTS não pode ler símbolo/número solto)
   // e normaliza typo de TELA (3+ letras repetidas). A tela usa outros campos, não a narração.
   for (const c of script.cenas) {
@@ -114,12 +188,12 @@ async function gerar() {
   // rodízio de variações (dry-run não gasta o rodízio). Se falhar (quota/timeout/sem key),
   // segue no marinho sólido — o post NUNCA deixa de sair pelo fundo.
   try {
-    const { prompt, id } = escolherPromptFundo({ categoria: t.categoria, persistir: !DRY_RUN });
+    const { prompt, id } = escolherPromptFundo({ categoria, persistir: !DRY_RUN });
     const bgRel = `bg/video-${hoje()}.png`;
     await gerarFundo({ outPath: resolve(REMOTION, 'public', bgRel), prompt, aspectRatio: '9:16' });
     script.bg = bgRel;
     script.bgMode = 'foto';
-    console.log(`[video] fundo nano banana ligado: ${bgRel} (prompt ${id}, categoria ${t.categoria || 'generico'})`);
+    console.log(`[video] fundo nano banana ligado: ${bgRel} (prompt ${id}, categoria ${categoria})`);
   } catch (e) {
     console.warn('[video] fundo falhou — segue no marinho sólido:', e.message);
   }
@@ -177,7 +251,10 @@ async function gerar() {
   await copyFile(CAPTION, resolve(destDir, 'caption.txt'));
   const videoUrl = `${PAGES_BASE}/${postDir}/dinheiro-vaza.mp4`;
   console.log(`[video] caption no Pages: ${PAGES_BASE}/${postDir}/caption.txt`);
-  await writeFile(MANIFEST, JSON.stringify({ postDir, videoUrl, indice: idx }, null, 2) + '\n');
+  await writeFile(
+    MANIFEST,
+    JSON.stringify({ postDir, videoUrl, indice: idx, origem, pautaId, tema, categoria }, null, 2) + '\n',
+  );
   console.log(`[video] MP4 staged em docs/${postDir}/ — workflow comita e roda --post`);
 }
 
@@ -208,7 +285,7 @@ async function postar() {
     return;
   }
   const m = await lerJSON(MANIFEST);
-  const { videoUrl, indice } = m;
+  const { videoUrl, indice, origem, pautaId, tema, categoria } = m;
   if (!videoUrl) throw new Error('[video] manifest sem videoUrl — rode o generate (modo real) antes');
 
   await esperarPages(videoUrl);
@@ -231,12 +308,44 @@ async function postar() {
     console.warn('[video] status fetch falhou (ignorado):', e.message);
   }
 
-  // avança a fila (workflow comita estado-video.json)
-  const estado = await lerJSON(ESTADO);
-  estado.indice_atual = (typeof indice === 'number' ? indice : estado.indice_atual) + 1;
-  await writeFile(ESTADO, JSON.stringify(estado, null, 2) + '\n');
-  console.log(`[video] estado-video.json avançado → indice_atual=${estado.indice_atual}`);
+  // ── memória do post (o passo que faltava e cegava a trava) ────────────────
+  await registrarPost({
+    data: hoje(),
+    tipo: 'video',
+    tema,
+    categoria,
+    origem: origem || 'fila-auto',
+    run_id: process.env.GITHUB_RUN_ID || '',
+  });
+
+  if (pautaId) {
+    // pauta curada: marca o item e NÃO mexe em estado-video.json (a reserva fica parada)
+    await marcarItem(pautaId, 'postado', { postado_em: hoje() });
+    console.log('[video] origem pauta-curada → estado-video.json intocado (reserva parada onde estava)');
+  } else {
+    // fila de reserva: avança pro ÍNDICE REALMENTE CONSUMIDO + 1 (a trava pode ter pulado itens)
+    const estado = await lerJSON(ESTADO);
+    estado.indice_atual = (typeof indice === 'number' ? indice : estado.indice_atual) + 1;
+    await writeFile(ESTADO, JSON.stringify(estado, null, 2) + '\n');
+    console.log(`[video] estado-video.json avançado → indice_atual=${estado.indice_atual}`);
+  }
+
+  await escreverStatusFila({ agora: new Date().toISOString(), ...(await restantesReserva()) });
   console.log('[video] POST COMPLETO ✓ — Lucas finaliza no app (cola caption + trending sound)');
+}
+
+/** quantos temas ainda sobram em cada fila de RESERVA (pro status-fila). */
+async function restantesReserva() {
+  const conta = async (temasPath, estadoPath) => {
+    if (!existsSync(temasPath)) return 0;
+    const temas = await lerJSON(temasPath);
+    const idx = existsSync(estadoPath) ? (await lerJSON(estadoPath)).indice_atual || 0 : 0;
+    return Math.max(0, temas.length - idx);
+  };
+  return {
+    reservaCarrossel: await conta(resolve(__dirname, 'temas-carrossel.json'), resolve(__dirname, 'estado-carrossel.json')),
+    reservaVideo: await conta(TEMAS, ESTADO),
+  };
 }
 
 const main = POST_PHASE ? postar : gerar;

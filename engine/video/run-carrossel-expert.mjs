@@ -15,6 +15,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { refreshAccessToken, postarTikTokInbox, getPostStatus, montarTextos } from '../openai/src/postar.mjs';
 import { getIgToken, getIgUserId } from '../openai/src/ig-token.mjs';
+import { registrarPost } from './anti-repeticao.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(__dirname, '../..');
@@ -23,6 +24,13 @@ const DRY_RUN = (process.env.DRY_RUN ?? 'true') !== 'false';
 const QUAL = (process.env.CARROSSEL || '').toLowerCase();
 
 const NOMES = { a: 'Gestores/CDI', b: 'FII cota/volatilidade', c: 'FII papel vs tijolo' };
+// tema/categoria de cada um, pro append em data/historico.json (a trava anti-repetição precisa
+// enxergar os posts da Expert como enxerga os do gerador — senão nasce cega pra eles).
+const TEMAS = {
+  a: { tema: 'Gestores da Expert XP: por que o CDI é o pior lugar pro longo prazo', categoria: 'investimento' },
+  b: { tema: 'FII: a cota cai, o imóvel continua lá — volatilidade não é perda de fundamento', categoria: 'fii' },
+  c: { tema: 'FII de papel ou FII de tijolo: você comprou qual?', categoria: 'fii' },
+};
 if (!['a', 'b', 'c'].includes(QUAL)) { console.error(`[expert] CARROSSEL inválido: "${QUAL}" (use a|b|c)`); process.exit(1); }
 
 const postDir = `post-carrossel-expert-${QUAL}`;
@@ -63,6 +71,15 @@ console.log(`[expert] TikTok inbox OK — publish_id=${publishId}`);
 console.log(`[expert] caption pro app: ${PAGES_BASE}/${postDir}/caption.txt`);
 try { console.log('[expert] status:', JSON.stringify(await getPostStatus({ publishId, accessToken: tok.accessToken }))); }
 catch (e) { console.warn('[expert] status fetch falhou (ignorado):', e.message); }
+
+// memória do post: o workflow commita data/historico.json depois deste passo.
+await registrarPost({
+  data: new Date().toISOString().slice(0, 10),
+  tipo: 'carrossel',
+  ...TEMAS[QUAL],
+  origem: 'expert',
+  run_id: process.env.GITHUB_RUN_ID || '',
+});
 
 // ── IG cross-post (full-auto, ISOLADO — falha nunca derruba o TikTok) ────────
 if ((process.env.IG_CROSSPOST || 'off').toLowerCase() !== 'on') {

@@ -18,6 +18,8 @@ import { gerarFundo } from '../openai/src/gerar-fundo.mjs';
 import { escolherPromptFundo } from '../openai/src/prompts-fundo.mjs';
 import { garantirHashtags } from '../openai/src/hashtags.mjs';
 import { refreshAccessToken, postarTikTokInbox, getPostStatus, montarTextos } from '../openai/src/postar.mjs';
+import { lerHistorico, registrarPost, checarCandidato, primeiroElegivel, jaPostouEm, REGRAS_CURADO } from './anti-repeticao.mjs';
+import { lerPauta, proximoPendente, marcarItem, lerAssets, lerCaption, escreverStatusFila } from './pauta.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(__dirname, '../..');
@@ -61,28 +63,140 @@ function run(cmd, args, opts = {}) {
   });
 }
 
-// tema: env TOPICO / argv (após flags) / fila temas-carrossel.json[estado-carrossel.indice_atual]
-// devolve também a CATEGORIA (pro fundo): da fila, ou env CATEGORIA p/ tópico custom (senão generico).
-async function resolverTopico() {
+// tema: env TOPICO / argv (após flags) / fila de RESERVA temas-carrossel.json[estado-carrossel].
+// A trava anti-repetição (anti-repeticao.mjs) decide o que pode virar post; nada aqui rebobina.
+//
+// TOPICO manual roda só com a regra do slug (o Lucas escolheu na mão — heurística de recência não
+// veta decisão humana), mas repetir tema já publicado continua proibido. FORCAR=true fura a trava.
+async function resolverTopico(historico) {
   const arg = process.argv.slice(2).find((a) => !a.startsWith('--'));
   const custom = process.env.TOPICO || arg;
-  if (custom) return { topico: custom, categoria: process.env.CATEGORIA || 'generico' };
+  if (custom) {
+    const candidato = { tema: custom, categoria: process.env.CATEGORIA || 'generico' };
+    const { ok, motivo } = checarCandidato(candidato, historico, { regras: REGRAS_CURADO });
+    if (!ok && process.env.FORCAR !== 'true') {
+      console.log(`::warning::[trava] TOPICO manual "${custom}" BLOQUEADO — ${motivo}`);
+      console.log('[carrossel] use FORCAR=true se for intencional. Saindo limpo, nada postado.');
+      return null;
+    }
+    if (!ok) console.log(`::warning::[trava] FORCAR=true — postando mesmo bloqueado (${motivo})`);
+    return { topico: custom, categoria: candidato.categoria, origem: 'manual', indice: null };
+  }
+
   const temas = await lerJSON(TEMAS);
-  const raw = existsSync(ESTADO) ? (await lerJSON(ESTADO)).indice_atual : 0;
-  const idx = ((raw % temas.length) + temas.length) % temas.length; // wrap circular na fila
-  return { topico: temas[idx]?.tema, categoria: temas[idx]?.categoria || 'generico' };
+  const desde = existsSync(ESTADO) ? (await lerJSON(ESTADO)).indice_atual || 0 : 0;
+  // WRAP CIRCULAR MORTO (era `raw % temas.length`, causa raiz do dólar repetido em 31/07):
+  // a fila acabou, ela NÃO rebobina.
+  if (desde >= temas.length) {
+    console.log(`::warning::[carrossel] fila de reserva acabou (idx ${desde} >= ${temas.length} temas) — nada a gerar.`);
+    return null;
+  }
+  // pula os bloqueados e pega o primeiro elegível daqui pra frente
+  const { item, indice } = primeiroElegivel(temas, historico, { desde, rotulo: 'reserva-carrossel' });
+  if (!item) {
+    console.log('::warning::[carrossel] nenhum tema elegível na fila de reserva — a trava bloqueou todos.');
+    return null;
+  }
+  return { topico: item.tema, categoria: item.categoria || 'generico', origem: 'fila-auto', indice };
+}
+
+// ── PRÉ-PRONTO ───────────────────────────────────────────────────────────────
+// Item de pauta curada COM assets: publica a pasta como está. Sem roteirista, sem Gemini,
+// sem gerar fundo, sem Remotion. Os assets já estão commitados (logo, já no Pages).
+async function prepararPrePronto(item) {
+  const { postDir, arquivos, capPath, tipoAsset } = lerAssets(item.assets);
+  if (tipoAsset !== 'foto') throw new Error(`[carrossel] ${item.assets} tem MP4, não JPEG — isso é pauta de vídeo`);
+  const caption = await lerCaption(capPath);
+  // caption do pré-pronto já vem FINAL (CTA + hashtags) — hashtags:[] pra não duplicar; o
+  // garantirHashtags segue valendo (dedupe embutido) pra travar as obrigatórias do Squad XP.
+  const { title, description } = montarTextos({ caption, hashtags: [] });
+  const descricaoFinal = garantirHashtags(description).trimEnd();
+  const photoUrls = arquivos.map((f) => `${PAGES_BASE}/${postDir}/${f}`);
+
+  console.log(`[carrossel] PRÉ-PRONTO "${item.id}" — ${photoUrls.length} slides de ${item.assets} (nada é gerado)`);
+  await mkdir(VIDEO_OUT, { recursive: true });
+  await writeFile(CAPTION, `${title}\n\n${descricaoFinal}\n`);
+  await writeFile(
+    MANIFEST,
+    JSON.stringify(
+      { postDir, photoUrls, title, description: descricaoFinal, origem: 'pauta-curada', pautaId: item.id, tema: item.tema, categoria: item.categoria, indice: null },
+      null,
+      2,
+    ) + '\n',
+  );
 }
 
 // ── GERAR ────────────────────────────────────────────────────────────────────
 async function gerar() {
   // IDEMPOTÊNCIA POR DIA (anti post-duplo): run REAL só 1x por dia (cron + dispatch não colidem).
+  // Agora pelo HISTÓRICO, não pela pasta em docs/ — a checagem por pasta bloquearia um
+  // pré-pronto cuja pasta de assets casasse com a data do dia. A de pasta virou guarda do
+  // caminho GERADO (é ele que cria docs/post-carrossel-<hoje>), lá no gerarComRoteirista.
+  const historico = await lerHistorico();
+  if (!DRY_RUN && jaPostouEm(historico, { data: hoje(), tipo: 'carrossel' })) {
+    console.log(`[carrossel] histórico já tem carrossel de ${hoje()} — post de hoje já saiu. Saindo limpo (anti-duplo).`);
+    return;
+  }
+
+  // 1º a FILA CURADA (data/pauta.json). O roteirista automático é RESERVA.
+  const pauta = await lerPauta();
+  const item = proximoPendente(pauta, 'carrossel', hoje());
+
+  if (item) {
+    // Item aprovado na mão pelo Lucas → só a regra do slug (não repetir o que já saiu).
+    const { ok, motivo } = checarCandidato({ tema: item.tema, categoria: item.categoria }, historico, { regras: REGRAS_CURADO });
+    if (!ok) {
+      console.log(`::warning::[trava] pauta "${item.id}" BLOQUEADA — ${motivo}`);
+      if (!DRY_RUN) await marcarItem(item.id, 'bloqueado', { motivo });
+      console.log('[carrossel] item curado marcado como bloqueado. Saindo limpo, nada postado.');
+      return;
+    }
+    if (item.assets) {
+      if (DRY_RUN) {
+        const { arquivos } = lerAssets(item.assets);
+        console.log(`[carrossel] DRY_RUN + PRÉ-PRONTO "${item.id}": publicaria ${arquivos.length} slides de ${item.assets}. Nada gerado, nada postado.`);
+        return;
+      }
+      await prepararPrePronto(item);
+      return;
+    }
+    // pauta SEM assets: o roteirista escreve em cima do tema/resumo dados, sem escolher assunto.
+    console.log(`[carrossel] pauta curada "${item.id}" (sem assets) → roteirista escreve sobre o tema dado`);
+    return gerarComRoteirista({
+      topico: item.resumo ? `${item.tema}\n\nÂngulo definido pela pauta: ${item.resumo}` : item.tema,
+      tema: item.tema,
+      categoria: item.categoria || 'generico',
+      origem: 'pauta-curada',
+      pautaId: item.id,
+      indice: null,
+    });
+  }
+
+  // fila curada vazia → roteirista automático COM A TRAVA VALENDO.
+  console.log('[carrossel] fila curada vazia → caindo na reserva (temas-carrossel.json) com a trava ligada');
+  const escolha = await resolverTopico(historico);
+  if (!escolha) {
+    console.log('[carrossel] sem tema elegível. Saindo limpo, NADA POSTADO (nunca postar repetido "porque era a vez dele").');
+    return;
+  }
+  return gerarComRoteirista({
+    topico: escolha.topico,
+    tema: escolha.topico,
+    categoria: escolha.categoria,
+    origem: escolha.origem,
+    pautaId: null,
+    indice: escolha.indice,
+  });
+}
+
+// gera o carrossel de fato (roteirista → fundo → render N JPEG → stage docs + manifesto)
+async function gerarComRoteirista({ topico, tema, categoria, origem, pautaId, indice }) {
+  // anti-duplo do caminho GERADO: é este que faz stage em docs/post-carrossel-<hoje>.
   if (!DRY_RUN && existsSync(resolve(DOCS, `post-carrossel-${hoje()}`))) {
     console.log(`[carrossel] docs/post-carrossel-${hoje()} já existe — post de hoje já saiu. Saindo limpo (anti-duplo).`);
     return;
   }
-  const { topico, categoria } = await resolverTopico();
-  if (!topico) throw new Error('[carrossel] sem tópico (passe TOPICO=... ou argumento)');
-  console.log(`[carrossel] tema: "${topico}" (categoria=${categoria}, dryRun=${DRY_RUN})`);
+  console.log(`[carrossel] tema: "${tema}" (categoria=${categoria}, origem=${origem}, dryRun=${DRY_RUN})`);
 
   // 1. roteiro multi-slide (validador de caractere + compliance + CTA travada já embutidos)
   const script = await gerarRoteiroCarrossel({ topico });
@@ -150,7 +264,10 @@ async function gerar() {
   // caption junto no Pages: o Lucas abre .../post-carrossel-DATA/caption.txt no celular e cola no app
   await copyFile(CAPTION, resolve(destDir, 'caption.txt'));
   console.log(`[carrossel] caption no Pages: ${PAGES_BASE}/${postDir}/caption.txt`);
-  await writeFile(MANIFEST, JSON.stringify({ postDir, photoUrls, title, description: descricaoFinal }, null, 2) + '\n');
+  await writeFile(
+    MANIFEST,
+    JSON.stringify({ postDir, photoUrls, title, description: descricaoFinal, origem, pautaId, tema, categoria, indice }, null, 2) + '\n',
+  );
   console.log(`[carrossel] ${photoUrls.length} JPEGs staged em docs/${postDir}/ — workflow comita e roda --post`);
 }
 
@@ -178,7 +295,7 @@ async function postar() {
     return;
   }
   const m = await lerJSON(MANIFEST);
-  const { photoUrls, title, description } = m;
+  const { photoUrls, title, description, origem, pautaId, tema, categoria, indice } = m;
   if (!Array.isArray(photoUrls) || !photoUrls.length) throw new Error('[carrossel] manifesto sem photoUrls — rode o gerar (modo real) antes');
   for (const u of photoUrls) await esperarPages(u);
 
@@ -197,11 +314,43 @@ async function postar() {
     console.warn('[carrossel] status fetch falhou (ignorado):', e.message);
   }
 
-  // avança estado-carrossel.json (só em post real)
-  const estado = existsSync(ESTADO) ? await lerJSON(ESTADO) : { indice_atual: 0 };
-  estado.indice_atual = (estado.indice_atual || 0) + 1;
-  await writeFile(ESTADO, JSON.stringify(estado, null, 2) + '\n');
-  console.log(`[carrossel] estado-carrossel.json avançado → indice_atual=${estado.indice_atual}`);
+  // ── memória do post (o passo que faltava e cegava a trava) ────────────────
+  await registrarPost({
+    data: hoje(),
+    tipo: 'carrossel',
+    tema,
+    categoria,
+    origem: origem || 'fila-auto',
+    run_id: process.env.GITHUB_RUN_ID || '',
+  });
+
+  if (pautaId) {
+    // pauta curada: marca o item e NÃO mexe em estado-carrossel.json (a reserva fica parada)
+    await marcarItem(pautaId, 'postado', { postado_em: hoje() });
+    console.log('[carrossel] origem pauta-curada → estado-carrossel.json intocado (reserva parada onde estava)');
+  } else {
+    // fila de reserva: avança pro ÍNDICE REALMENTE CONSUMIDO + 1 (a trava pode ter pulado itens)
+    const estado = existsSync(ESTADO) ? await lerJSON(ESTADO) : { indice_atual: 0 };
+    estado.indice_atual = (typeof indice === 'number' ? indice : estado.indice_atual || 0) + 1;
+    await writeFile(ESTADO, JSON.stringify(estado, null, 2) + '\n');
+    console.log(`[carrossel] estado-carrossel.json avançado → indice_atual=${estado.indice_atual}`);
+  }
+
+  await escreverStatusFila({ agora: new Date().toISOString(), ...(await restantesReserva()) });
+}
+
+/** quantos temas ainda sobram em cada fila de RESERVA (pro status-fila). */
+async function restantesReserva() {
+  const conta = async (temasPath, estadoPath) => {
+    if (!existsSync(temasPath)) return 0;
+    const temas = await lerJSON(temasPath);
+    const idx = existsSync(estadoPath) ? (await lerJSON(estadoPath)).indice_atual || 0 : 0;
+    return Math.max(0, temas.length - idx);
+  };
+  return {
+    reservaCarrossel: await conta(TEMAS, ESTADO),
+    reservaVideo: await conta(resolve(__dirname, 'temas-video.json'), resolve(__dirname, 'estado-video.json')),
+  };
 }
 
 const main = POST_PHASE ? postar : gerar;

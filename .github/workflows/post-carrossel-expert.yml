@@ -32,7 +32,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read   # não commita nada (assets já estão no Pages)
+  contents: write  # assets já estão no Pages; commita só o append em data/historico.json
 
 jobs:
   expert:
@@ -73,3 +73,18 @@ jobs:
         env:
           CARROSSEL: ${{ steps.qual.outputs.carrossel }}
         run: node engine/video/run-carrossel-expert.mjs
+
+      # sem isso o append fica só no runner e a trava anti-repetição nasce cega pros posts Expert
+      - name: Commit & push historico
+        if: env.DRY_RUN != 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/historico.json
+          if git diff --cached --quiet; then
+            echo "historico sem mudança"
+          else
+            git commit -m "chore(expert): registra post no historico (run ${{ github.run_id }})"
+            git push
+          fi

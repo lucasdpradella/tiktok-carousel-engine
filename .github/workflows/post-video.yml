@@ -136,16 +136,19 @@ jobs:
         continue-on-error: true
         run: node engine/openai/src/cross-post-ig.mjs --video
 
-      - name: Commit & push estado-video.json
+      # historico.json é o que cega a trava se não voltar pro repo — commitado no MESMO passo
+      # que avança o estado. pauta.json volta com o item marcado postado/bloqueado.
+      - name: Commit & push estado + historico/pauta
         if: env.DRY_RUN != 'true'
         working-directory: ${{ github.workspace }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add engine/video/estado-video.json engine/video/estado-fundos.json
+          git add engine/video/estado-video.json engine/video/estado-fundos.json \
+                  data/historico.json data/pauta.json data/status-fila.json
           if git diff --cached --quiet; then
             echo "estado-video sem mudança"
           else
-            git commit -m "chore(video): avanca fila apos post (run ${{ github.run_id }})"
+            git commit -m "chore(video): avanca fila + historico apos post (run ${{ github.run_id }})"
             git push
           fi

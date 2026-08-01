@@ -1,0 +1,5 @@
+# segredos — nunca commitar (F1 2026-07-12)
+.env
+.env*.local
+*.local.json
+engine/secrets-tracker.md
