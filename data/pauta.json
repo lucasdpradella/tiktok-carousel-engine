@@ -18,9 +18,8 @@
     "categoria": "planejamento",
     "assets": "docs/post-carrossel-manual-2026-08-03",
     "agendar": "2026-08-03",
-    "status": "postado",
+    "status": "pendente",
     "origem": "cowork",
-    "obs": "8 slides 1080x1350 JPEG q92 + caption.txt prontos. Produzidos no Cowork pelo template unico Templates/carrossel-lp (tema azul). NAO passar pelo roteirista/Gemini, NAO regerar arte, NAO tocar estado-carrossel.json. Caption ja vem com CTA PRADEX, mencoes e hashtags do Squad; rodar so o garantirHashtags como rede de seguranca. Mesma categoria (planejamento) do item de 01/08: a R2 nao veta mais item curado, entao passa sem FORCAR.",
-    "postado_em": "2026-08-03"
+    "obs": "8 slides 1080x1350 JPEG q92 + caption.txt prontos. Produzidos no Cowork pelo template unico Templates/carrossel-lp (tema azul). NAO passar pelo roteirista/Gemini, NAO regerar arte, NAO tocar estado-carrossel.json. Caption ja vem com CTA PRADEX, mencoes e hashtags do Squad; rodar so o garantirHashtags como rede de seguranca. Mesma categoria (planejamento) do item de 01/08: a R2 nao veta mais item curado, entao passa sem FORCAR."
   }
 ]
