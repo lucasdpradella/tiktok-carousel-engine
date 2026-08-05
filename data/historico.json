@@ -306,5 +306,14 @@
     "slug": "precisa-renda-precisa-clareza",
     "origem": "pauta-curada",
     "run_id": "30818384059"
+  },
+  {
+    "data": "2026-08-05",
+    "tipo": "video",
+    "tema": "Por que os juros sobem e descem",
+    "categoria": "mercado",
+    "slug": "juros-sobem-descem",
+    "origem": "fila-auto",
+    "run_id": "31018861045"
   }
 ]
