@@ -31,9 +31,10 @@
     "hashtag_tema": "#campanhaxp",
     "assets": "docs/post-carrossel-manual-2026-08-07",
     "agendar": "2026-08-07",
-    "status": "pendente",
+    "status": "postado",
     "origem": "cowork",
-    "obs": "ABERTURA DO MES (revisao 2 de 06/08). Tema visual BRANCO. Numeros conferidos na peca oficial em 06/08: 5.000 pts Livelo/R$ 100 mil, teto 60.000 a partir de R$ 1 mi, credito 29/10/2026, CNP e BR Consorcios, cliente XP e Rico, restricao colaborador. NAO passar pelo roteirista, NAO regerar arte, NAO tocar estado-carrossel.json. Cron de 07/08 ja passou: disparar via workflow_dispatch (dry_run=false, ig_crosspost=on)."
+    "obs": "ABERTURA DO MES (revisao 2 de 06/08). Tema visual BRANCO. Numeros conferidos na peca oficial em 06/08: 5.000 pts Livelo/R$ 100 mil, teto 60.000 a partir de R$ 1 mi, credito 29/10/2026, CNP e BR Consorcios, cliente XP e Rico, restricao colaborador. NAO passar pelo roteirista, NAO regerar arte, NAO tocar estado-carrossel.json. Cron de 07/08 ja passou: disparar via workflow_dispatch (dry_run=false, ig_crosspost=on).",
+    "postado_em": "2026-08-07"
   },
   {
     "id": "2026-08-10-insight-que-sobreviveu",
