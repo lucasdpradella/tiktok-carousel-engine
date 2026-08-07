@@ -1,0 +1,28 @@
+name: tiktok-status
+
+# Diagnostico sob demanda: pergunta ao TikTok o status (e fail_reason) de um publish.
+# Criado 2026-08-07 depois de dois carrosseis sumirem em PROCESSING_DOWNLOAD.
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_ids:
+        description: 'publish_id(s), separados por virgula'
+        required: true
+        type: string
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Consulta status
+        env:
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+          PUBLISH_IDS: ${{ inputs.publish_ids }}
+        run: node scripts/tiktok-status.mjs
