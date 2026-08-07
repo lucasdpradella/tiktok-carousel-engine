@@ -315,5 +315,14 @@
     "slug": "juros-sobem-descem",
     "origem": "fila-auto",
     "run_id": "31018861045"
+  },
+  {
+    "data": "2026-08-07",
+    "tipo": "carrossel",
+    "tema": "Campanha de consórcio: a tabela, o teto e a pergunta que decide",
+    "categoria": "planejamento",
+    "slug": "campanha-consorcio-tabela-teto-pergunta-decide",
+    "origem": "pauta-curada",
+    "run_id": "31198387176"
   }
 ]
