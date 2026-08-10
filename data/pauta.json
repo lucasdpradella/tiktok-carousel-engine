@@ -44,9 +44,10 @@
     "hashtag_tema": "#eventos",
     "assets": "docs/post-carrossel-manual-2026-08-10",
     "agendar": "2026-08-10",
-    "status": "pendente",
+    "status": "postado",
     "origem": "cowork",
-    "obs": "Espinha do mes (a pergunta volta como CTA nas pecas de 14, 17 e 21/08). Revisao 2 de 06/08: saiu de 07/08 pra 10/08, numero 02, tema visual AZUL (re-render 07/08). NAO passar pelo roteirista, NAO regerar arte."
+    "obs": "Espinha do mes (a pergunta volta como CTA nas pecas de 14, 17 e 21/08). Revisao 2 de 06/08: saiu de 07/08 pra 10/08, numero 02, tema visual AZUL (re-render 07/08). NAO passar pelo roteirista, NAO regerar arte.",
+    "postado_em": "2026-08-10"
   },
   {
     "id": "2026-08-12-pergunta-no-corredor-expert",
