@@ -33,7 +33,7 @@
     "agendar": "2026-08-07",
     "status": "postado",
     "origem": "cowork",
-    "obs": "ABERTURA DO MES (revisao 2 de 06/08). Tema visual BRANCO. Numeros conferidos na peca oficial em 06/08: 5.000 pts Livelo/R$ 100 mil, teto 60.000 a partir de R$ 1 mi, credito 29/10/2026, CNP e BR Consorcios, cliente XP e Rico, restricao colaborador. NAO passar pelo roteirista, NAO regerar arte, NAO tocar estado-carrossel.json. Cron de 07/08 ja passou: disparar via workflow_dispatch (dry_run=false, ig_crosspost=on). REPOST: 1a tentativa (run 31182073015) morreu em PROCESSING_DOWNLOAD no TikTok, inbox nunca chegou.",
+    "obs": "ABERTURA DO MES (revisao 2 de 06/08). Tema visual BRANCO. Numeros conferidos na peca oficial em 06/08: 5.000 pts Livelo/R$ 100 mil, teto 60.000 a partir de R$ 1 mi, credito 29/10/2026, CNP e BR Consorcios, cliente XP e Rico, restricao colaborador. NAO passar pelo roteirista, NAO regerar arte, NAO tocar estado-carrossel.json. Cron de 07/08 ja passou: disparar via workflow_dispatch (dry_run=false, ig_crosspost=on). REPOST: dois runs em 07/08, os dois workflow_dispatch (#19 as 10:19 e #20 as 13:36 BRT). Os dois entregaram no inbox, so demoraram. Rascunho duplicado apagado na mao em 08/08. IG nao espelhou: no workflow_dispatch o input ig_crosspost tem default 'off', entao a expressao curto-circuita antes de consultar a variable.",
     "postado_em": "2026-08-07"
   },
   {
