@@ -69,6 +69,15 @@ jobs:
       IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
 
     steps:
+      # Disparo na branch errada tem que doer na hora: step (vermelho e explicado na aba
+      # Actions), não `if` no job (some como "skipped"). Inerte no cron — schedule sempre
+      # roda na default.
+      - name: Guard — só roda na branch default
+        if: github.ref_name != github.event.repository.default_branch
+        run: |
+          echo "::error::Este workflow so pode rodar na branch default (${{ github.event.repository.default_branch }}). Disparado em '${{ github.ref_name }}' — abortando antes de gerar ou postar."
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@v4
 
