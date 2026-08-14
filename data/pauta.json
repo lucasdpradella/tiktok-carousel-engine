@@ -69,9 +69,10 @@
     "hashtag_tema": "#campanhaxp",
     "assets": "docs/post-carrossel-manual-2026-08-14",
     "agendar": "2026-08-14",
-    "status": "pendente",
+    "status": "postado",
     "origem": "cowork",
-    "obs": "Tema visual BRANCO. CTA amarra na espinha do mes (peca de 10/08). NAO passar pelo roteirista, NAO regerar arte."
+    "obs": "Tema visual BRANCO. CTA amarra na espinha do mes (peca de 10/08). NAO passar pelo roteirista, NAO regerar arte.",
+    "postado_em": "2026-08-14"
   },
   {
     "id": "2026-08-17-gestoras-tiraram-da-mesa",
