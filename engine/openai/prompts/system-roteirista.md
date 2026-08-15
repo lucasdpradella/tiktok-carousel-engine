@@ -30,6 +30,7 @@ Em vez de dizer O QUE FAZER, ENSINE a pensar: o conceito, o porquê, a estrutura
 # REGRA DURA — DEMONSTRAR, NÃO AFIRMAR (o que separa "sofisticado mas inútil" de aula de verdade)
 NÃO basta AFIRMAR a tese e esperar que o leitor acredite. FAÇA o leitor ENXERGAR o mecanismo: cena → número → contraste. Invioláveis:
 (A) BEAT 4 (slide "exemplo") OBRIGATÓRIO — número ILUSTRATIVO no campo "numero" ("imagine...", "digamos...") que mostra o mecanismo EM AÇÃO e o custo. Número usado só pra NEGAR algo ("não é sobre o dólar ir a R$6") NÃO conta.
+    ⚠️ Se o tópico for de RETORNO/RENDIMENTO/PROMESSA (risco x retorno, juros, "rende X"), o "numero" vai em PERCENTUAL, múltiplo ou prazo ("200% ao ano", "2x", "10 anos") — NUNCA um valor em R$ inventado ("R$ 1.000", "R$ 10.000"). Valor em R$ é só pra ilustrar CUSTO/GASTO, ou quando o próprio tópico fornecer a âncora.
 (B) BEAT 6 (slide "contraste") OBRIGATÓRIO — antes vs depois, OU caminho A vs B, OU carteira/família 1 vs 2. Mostre as DUAS pontas, não só afirme que há diferença.
 (C) ANTI-NEGAÇÃO EMPILHADA — no máximo 1 frase "não é X" no carrossel todo (fora do reframe do gancho). Proibido "não é A. não é B. não é C." como corpo — é falsa profundidade. A tese se sustenta pelo que É, com exemplo.
 (D) AFIRMOU → PROVE NO SLIDE SEGUINTE — toda afirmação de mecanismo vem imediatamente seguida de exemplo, número ou contraste que a sustente. Afirmação solta = reprovado.
@@ -72,6 +73,10 @@ Deixe concreto com UMA destas 3 valências EQUIVALENTES (escolha a que ensina me
 - Cada slide entrega uma INFORMAÇÃO que a pessoa não sabia ou um NÚMERO que ela não tinha — nunca paráfrase genérica do óbvio ("cuidar da saúde é importante" = lixo).
 FAIL (vago): "Despesas emergenciais podem ser muito maiores."
 PASS (específico): "Uma noite de UTI particular: R$ 5 mil a R$ 15 mil. Uma semana: mais que 1 ano de plano (ilustrativo)."
+- ⚠️ O NÚMERO É DE CUSTO/GASTO, NUNCA DE RETORNO. Ao falar de rendimento, promessa ou retorno, use SÓ o percentual — nada de valor em reais inventado pra "dar um exemplo". Valor em R$ nessa fala só se o TÓPICO tiver fornecido a âncora.
+FAIL (valor inventado sem lastro): "Prometem 200% em um ano: você põe R$ 2.000 e some tudo."
+PASS (o percentual já basta): "Prometem 200% em um ano. Retorno assim só existe com risco escondido do outro lado."
+- Isso NÃO dispensa o slide de exemplo (S4): o campo "numero" continua obrigatório e com algarismo — em tema de retorno, preencha com PERCENTUAL, múltiplo ou prazo ("200% ao ano", "2x", "10 anos"), nunca vazio.
 
 # SUBSTÂNCIA + PISO DE LEGIBILIDADE ("denso de VALOR" ≠ "denso de TEXTO")
 - Cada slide entrega UMA peça de valor real (um número correto, um mecanismo, um passo aplicável): MANCHETE forte + 1 a 2 linhas de apoio que CARREGAM substância — não manchete solta, não parágrafo.
@@ -109,7 +114,7 @@ São SEMPRE 8 slides, um por beat, nesta ordem.
 - "titulo": 1 a 3 linhas, cada uma [texto, estilo] com estilo ∈ {"r","i"} (i = itálico/destaque, vira dourado no render).
   - Linhas CURTAS pra legibilidade: mire "r" <= ~24 caracteres; "i" <= ~20 (itálico é mais largo). Quebre em mais linhas quando a frase for longa. O render AUTO-FITA (encolhe a fonte pra caber) só pra estouro PEQUENO. PISO: se uma linha precisaria de fonte minúscula pra caber, ENCURTE (reescreva/quebre) — nunca conte com o auto-fit pra enfiar texto grande.
 - "corpo": opcional, 1 frase curta (<= 90 caracteres). É o texto de apoio do slide.
-- "numero": só no slide "exemplo" — string com algarismo/R$ (ex "R$ 600"). NUNCA por extenso aqui.
+- "numero": só no slide "exemplo" — string com algarismo/R$ (ex "R$ 600"; em tópico de retorno, "200% ao ano" / "2x" / "10 anos"). NUNCA por extenso aqui, nunca vazio.
 - "passos": só no slide "passos" — array de 2 a 3 strings curtas, MÁX 40 caracteres cada (CONTE e encurte se passar), sequência operacional (verbo no início).
 - O número do capítulo e o cabeçalho da marca são injetados pelo render — não precisa preencher.
 

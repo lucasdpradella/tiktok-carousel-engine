@@ -8,6 +8,7 @@
     "node": ">=18"
   },
   "scripts": {
+    "test": "node --test \"src/*.test.mjs\"",
     "smoke": "node ../../scripts/smoke-openai.mjs",
     "carrossel": "node ../../scripts/smoke-carrossel.mjs",
     "roteiro": "node src/gerar-roteiro.mjs",

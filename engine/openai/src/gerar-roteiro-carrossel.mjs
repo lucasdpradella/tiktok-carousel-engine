@@ -8,7 +8,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chat } from './chat-provider.mjs'; // Gemini (Pro→Flash) com fallback OpenAI
-import { acharAcaoProibida, contarNegacoes, acharReframeIrresponsavel, acharCustoVago } from './compliance-guard.mjs';
+import { acharAcaoProibida, contarNegacoes, acharReframeIrresponsavel, acharCustoVago, acharValorSemLastro } from './compliance-guard.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SYS_PATH = resolve(__dirname, '../prompts/system-roteirista.md');
@@ -27,7 +27,7 @@ const colapsa = (x) => (typeof x === 'string' ? x.replace(/([A-Za-zÀ-ÿ])\1{2,}
 
 // Compliance = AÇÃO, não TEMA — lista no módulo compartilhado (compliance-guard.mjs), igual ao
 // vídeo (sem drift). Bloqueia recomendação/promessa/timing/ticker/ALOCAÇÃO PRESCRITIVA (% carteira).
-function checarComplianceTexto(txt, onde) {
+function checarComplianceTexto(txt, onde, entrada = '') {
   const hit = acharAcaoProibida(txt);
   if (hit) {
     throw new Error(`${onde}: AÇÃO proibida ("${hit}") — recomendação/promessa/timing/alocação prescritiva. Reframe e ensine o conceito e a estrutura; para dosagem responda com PROCESSO ("depende do perfil e objetivo, é conversa de planejamento"), nunca com percentual.`);
@@ -36,9 +36,15 @@ function checarComplianceTexto(txt, onde) {
   if (irr) {
     throw new Error(`${onde}: REFRAME IRRESPONSÁVEL ("${irr}") — NÃO argumente contra proteção/necessidade (plano de saúde, seguro, previdência, reserva). Posicione o VALOR: transferência de risco, o custo de NÃO ter, como estruturar/escolher bem. Nunca "desperdício"/"paga e não usa"/"mau investimento".`);
   }
+  // NUNCA INVENTE (CLAUDE.md §4): valor em R$ colado em retorno/rendimento/promessa, sem vir de
+  // nenhum dado de entrada, é invenção pura — o percentual sozinho já comunica o risco.
+  const semLastro = acharValorSemLastro(txt, entrada);
+  if (semLastro) {
+    throw new Error(`${onde}: VALOR SEM LASTRO ("${semLastro}") — valor em reais inventado numa fala de RETORNO/RENDIMENTO/PROMESSA; o tópico não fornece essa âncora. TROQUE o valor por PERCENTUAL, múltiplo ou prazo, mantendo o campo "numero" PREENCHIDO com algarismo (ex "200% ao ano", "2x", "10 anos") — NUNCA esvazie o "numero" nem apague o slide de exemplo. Valor em R$ segue liberado em ilustração de CUSTO/GASTO (ex "R$ 1.200/mês de plano").`);
+  }
 }
 
-function validar(text, { strict = true } = {}) {
+function validar(text, { strict = true, entrada = '' } = {}) {
   let p;
   try {
     p = JSON.parse(text);
@@ -91,7 +97,7 @@ function validar(text, { strict = true } = {}) {
     }
     // compliance: bloqueia AÇÃO (recomendação/promessa/timing) na tela do slide
     const txtSlide = [sl.titulo.map((t) => t[0]).join(' '), sl.corpo, (sl.passos || []).join(' '), sl.numero].filter(Boolean).join(' ');
-    checarComplianceTexto(txtSlide, `slide ${n}`);
+    checarComplianceTexto(txtSlide, `slide ${n}`, entrada);
     // ESPECIFICIDADE: claim de custo sem número = raso. Reprova e o retry pede o número concreto.
     const vago = acharCustoVago(txtSlide);
     if (vago) {
@@ -99,7 +105,7 @@ function validar(text, { strict = true } = {}) {
     }
   });
 
-  checarComplianceTexto(p.caption, 'caption');
+  checarComplianceTexto(p.caption, 'caption', entrada);
 
   if (s[0].beat !== 'gancho') throw new Error('primeiro slide precisa ser beat "gancho"');
   if (s[s.length - 1].beat !== 'cta') throw new Error('último slide precisa ser beat "cta"');
@@ -153,7 +159,8 @@ export async function gerarRoteiroCarrossel({ topico, maxTentativas = 4 } = {}) 
     });
     try {
       // última tentativa degrada o PISO (aceita linha longa com warn) pra o post nunca falhar
-      return validar(text, { strict: attempt < maxTentativas });
+      // entrada = o tópico recebido (único dado real do prompt que pode sustentar valor em R$)
+      return validar(text, { strict: attempt < maxTentativas, entrada: topico });
     } catch (e) {
       lastErr = e.message;
       console.warn(`[carrossel] tentativa ${attempt}/${maxTentativas} rejeitada: ${e.message}`);

@@ -9,7 +9,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chat } from '../openai/src/chat-provider.mjs'; // Gemini (Pro→Flash) com fallback OpenAI
-import { acharAcaoProibida, contarNegacoes, acharReframeIrresponsavel, acharCustoVago } from '../openai/src/compliance-guard.mjs';
+import { acharAcaoProibida, contarNegacoes, acharReframeIrresponsavel, acharCustoVago, acharValorSemLastro } from '../openai/src/compliance-guard.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMAS = resolve(__dirname, 'temas-video.json');
@@ -43,7 +43,7 @@ function _textoCena(c) {
   if (Array.isArray(c.itens)) for (const it of c.itens) if (Array.isArray(it.linhas)) p.push(it.linhas.join(' '));
   return p.filter(Boolean).join(' ');
 }
-function checarCompliance(c, id) {
+function checarCompliance(c, id, entrada = '') {
   const txt = _textoCena(c);
   const hit = acharAcaoProibida(txt);
   if (hit) {
@@ -58,6 +58,12 @@ function checarCompliance(c, id) {
   const vago = acharCustoVago(txt);
   if (vago) {
     throw new Error(`cena ${id}: CUSTO VAGO ("${vago}") — troque por um número concreto ILUSTRATIVO (narração por extenso, ex "pode passar de cinquenta mil reais, só pra ilustrar"). Nada de "custa muito/caro" sem número.`);
+  }
+  // NUNCA INVENTE (CLAUDE.md §4): valor em R$ colado em retorno/rendimento/promessa, sem vir de
+  // nenhum dado de entrada, é invenção pura — o percentual sozinho já comunica o risco.
+  const semLastro = acharValorSemLastro(txt, entrada);
+  if (semLastro) {
+    throw new Error(`cena ${id}: VALOR SEM LASTRO ("${semLastro}") — valor em reais inventado numa fala de RETORNO/RENDIMENTO/PROMESSA; o tema não fornece essa âncora. TROQUE o valor por PERCENTUAL, múltiplo ou prazo, mantendo o campo de tela "numero" PREENCHIDO com algarismo (ex "200% ao ano", "2x", "10 anos") e a narração por extenso ("duzentos por cento em um ano") — NUNCA esvazie o "numero" nem corte a cena de exemplo. Valor em R$ segue liberado em ilustração de CUSTO/GASTO.`);
   }
 }
 
@@ -80,6 +86,7 @@ NÃO basta AFIRMAR a tese e esperar que o leitor acredite. FAÇA o leitor ENXERG
 (D) AFIRMOU → PROVE NA FRASE SEGUINTE — toda afirmação de mecanismo ("o real se desvaloriza estruturalmente", "hedge protege") vem IMEDIATAMENTE seguida de exemplo/número/cena que a sustente. Afirmação solta = reprovado.
 (E) GANCHO ANCORADO (beat 1) — abra numa CENA COTIDIANA já vivida (aeroporto, remédio importado, curso do filho fora, boleto que subiu), não no conceito abstrato. O reframe "X não é Y, é Z" vem logo DEPOIS, mas a cena vem PRIMEIRO.
 (F) DOSAGEM = PROCESSO, NÃO NÚMERO — quando o tema pedir "quanto" (quanto em dólar, quanto na reserva), NUNCA responda com percentual/faixa (ex "vinte a quarenta por cento") — é alocação prescritiva, PROIBIDO. Responda com PROCESSO: "quanto exatamente depende do seu perfil e objetivo, é conversa de planejamento, não regra de bolso." Mantém compliant E puxa pro serviço.
+(G2) NÚMERO É DE CUSTO, NÃO DE RETORNO — ao falar de rendimento, promessa ou retorno, use SÓ o percentual ("prometem duzentos por cento em um ano"). PROIBIDO inventar valor em reais pra "dar um exemplo" de retorno (FAIL: "você põe dois mil reais e some tudo"); o percentual sozinho já comunica o risco. Valor em reais só em ilustração de CUSTO/GASTO, ou quando o TEMA fornecer a âncora. Isso NÃO dispensa a cena "numero" (beat 4): em tema de retorno, preencha o campo de tela com PERCENTUAL, múltiplo ou prazo ("200% ao ano", "2x", "10 anos"), nunca vazio.
 (G) ESPECIFICIDADE — PROIBIDO quantificador vago onde deveria ter número: "custa muito", "pode custar caro", "sai caro", "muito dinheiro", "um valor alto", "pode ser muito maior". Toda afirmação de CUSTO/IMPACTO traz número concreto ilustrativo (na narração POR EXTENSO: "pode passar de cinquenta mil reais, só pra ilustrar"). Cada cena entrega uma informação ou número que a pessoa NÃO tinha — nunca paráfrase genérica do óbvio.
 
 ## EXEMPLOS (siga o PASS, evite o FAIL) — narração em extenso, TTS-safe
@@ -169,6 +176,9 @@ async function _gerarUma({ tema, resumo, hint } = {}) {
     throw new Error(`[roteirista-video] esperava 10-12 cenas (mín 7), recebi ${cenas?.length}`);
   }
 
+  // dados de ENTRADA reais (o que sustenta um valor em R$ na tela/narração — ver acharValorSemLastro)
+  const entrada = [tema, resumo].filter(Boolean).join(' ');
+
   const ids = new Set();
   cenas.forEach((c, i) => {
     if (!TIPOS.includes(c.tipo)) throw new Error(`[roteirista-video] cena ${i}: tipo inválido "${c.tipo}"`);
@@ -201,7 +211,7 @@ async function _gerarUma({ tema, resumo, hint } = {}) {
       }
     }
     // backstop de compliance: bloqueia recomendação de investimento → retry re-pede
-    checarCompliance(c, id);
+    checarCompliance(c, id, entrada);
   });
 
   // âncoras de estrutura
