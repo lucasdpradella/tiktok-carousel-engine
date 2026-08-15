@@ -29,6 +29,16 @@ test('acharValorSemLastro REPROVA o caso real do post de 12/08 (R$ 2.000 numa pr
   assert.equal(acharValorSemLastro(cena, TEMA_RISCO), 'r$ 2.000');
 });
 
+test('acharValorSemLastro REPROVA o post de 12/08 reconstruído (narração publicada + tela)', () => {
+  // narração literal de docs/post-video-2026-08-12/caption.txt — o "R$ 2.000" ficava nos campos de
+  // TELA da cena "numero" (por isso não aparece na caption). _textoCena junta os dois.
+  const narracao = 'Imagine um investimento que promete duzentos por cento em um ano, só pra ilustrar';
+  const tela = 'R$ 2.000 Em 1 ano: R$ 6.000 se a promessa fosse real.';
+  assert.equal(acharValorSemLastro(`${narracao} ${tela}`, TEMA_RISCO), 'r$ 2.000');
+  // a mesma narração SEM o valor na tela é a forma correta — o percentual sozinho basta
+  assert.equal(acharValorSemLastro(narracao, TEMA_RISCO), null);
+});
+
 test('acharValorSemLastro REPROVA valor inventado com a palavra de rendimento', () => {
   const cena = 'Prometeram que R$ 5.000 rendem o dobro em seis meses.';
   assert.equal(acharValorSemLastro(cena, TEMA_RISCO), 'r$ 5.000');
