@@ -82,9 +82,10 @@
     "hashtag_tema": "#confiança",
     "assets": "docs/post-carrossel-manual-2026-08-17",
     "agendar": "2026-08-17",
-    "status": "pendente",
+    "status": "postado",
     "origem": "cowork",
-    "obs": "Tema visual AZUL. Substituiu brasil-minerais-criticos na revisao de 06/08 (pasta antiga orfa no vault). Dados da Pesquisa de Investimentos Tematicos, sempre atribuidos, sem previsao. NAO passar pelo roteirista, NAO regerar arte."
+    "obs": "Tema visual AZUL. Substituiu brasil-minerais-criticos na revisao de 06/08 (pasta antiga orfa no vault). Dados da Pesquisa de Investimentos Tematicos, sempre atribuidos, sem previsao. NAO passar pelo roteirista, NAO regerar arte.",
+    "postado_em": "2026-08-17"
   },
   {
     "id": "2026-08-19-consorcio-nao-e-investimento",
