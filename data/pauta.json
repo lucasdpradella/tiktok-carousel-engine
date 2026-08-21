@@ -107,9 +107,10 @@
     "hashtag_tema": "#confiança",
     "assets": "docs/post-carrossel-manual-2026-08-21",
     "agendar": "2026-08-21",
-    "status": "pendente",
+    "status": "postado",
     "origem": "cowork",
-    "obs": "Tema visual BRANCO. Arte re-renderizada em 07/08 (deck revisado 06/08: slide de Implicacao no lugar da Caracteristica). NAO passar pelo roteirista, NAO regerar arte."
+    "obs": "Tema visual BRANCO. Arte re-renderizada em 07/08 (deck revisado 06/08: slide de Implicacao no lugar da Caracteristica). NAO passar pelo roteirista, NAO regerar arte.",
+    "postado_em": "2026-08-21"
   },
   {
     "id": "2026-08-24-portabilidade-passo-a-passo",
