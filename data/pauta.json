@@ -120,9 +120,10 @@
     "hashtag_tema": "#campanhaxp",
     "assets": "docs/post-carrossel-manual-2026-08-24",
     "agendar": "2026-08-24",
-    "status": "pendente",
+    "status": "postado",
     "origem": "cowork",
-    "obs": "Tema visual AZUL. Arte re-renderizada em 07/08 (deck revisado 06/08: campanha so na caption). Revisar numeros antes de subir: cross-post IG publica de verdade. NAO passar pelo roteirista, NAO regerar arte."
+    "obs": "Tema visual AZUL. Arte re-renderizada em 07/08 (deck revisado 06/08: campanha so na caption). Revisar numeros antes de subir: cross-post IG publica de verdade. NAO passar pelo roteirista, NAO regerar arte.",
+    "postado_em": "2026-08-24"
   },
   {
     "id": "2026-08-26-bolha-de-ia-pergunta",
