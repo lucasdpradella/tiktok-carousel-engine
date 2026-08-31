@@ -158,8 +158,9 @@
     "hashtag_tema": "#eventos",
     "assets": "docs/post-carrossel-manual-2026-08-31",
     "agendar": "2026-08-31",
-    "status": "pendente",
+    "status": "postado",
     "origem": "cowork",
-    "obs": "Fecha o mes e o ciclo #eventos. Tema visual AZUL, numero 08. Caption ja sem #ExpertXP2026. NAO passar pelo roteirista, NAO regerar arte."
+    "obs": "Fecha o mes e o ciclo #eventos. Tema visual AZUL, numero 08. Caption ja sem #ExpertXP2026. NAO passar pelo roteirista, NAO regerar arte.",
+    "postado_em": "2026-08-31"
   }
 ]
