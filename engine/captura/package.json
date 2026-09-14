@@ -1,0 +1,13 @@
+{
+  "name": "pradex-captura",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Captura das telas reais do PWA Pradex contra a conta de demo. Alimenta o Remotion (Fase 3).",
+  "scripts": {
+    "capturar": "node capturar.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.47.0"
+  }
+}
