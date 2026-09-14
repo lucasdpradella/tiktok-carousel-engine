@@ -176,7 +176,18 @@ async function gerarComRoteirista({ tema, resumo, categoria, origem, pautaId, id
   console.log(`[video] tema #${idx ?? '-'}: "${tema}" (categoria=${categoria}, origem=${origem}, dryRun=${DRY_RUN}, modoSemanal=${MODO_SEMANAL})`);
 
   // 1. roteiro → script.json (onde o Remotion lê) + cópia pro artifact
-  const script = await gerarScriptVideo({ tema, resumo });
+  let script;
+  try {
+    script = await gerarScriptVideo({ tema, resumo });
+  } catch (e) {
+    // Compliance reprovando é comportamento correto, não erro de infra: avisa e NÃO posta,
+    // em vez de marcar o run como failure (foi o que parou o vídeo em 02/09 e 09/09).
+    if (e.roteiroReprovado) {
+      console.log(`::warning::[video] roteiro reprovado pelos validadores — NADA POSTADO. ${e.message}`);
+      return;
+    }
+    throw e;
+  }
   // sanitiza a NARRAÇÃO por código antes do TTS (XTTS não pode ler símbolo/número solto)
   // e normaliza typo de TELA (3+ letras repetidas). A tela usa outros campos, não a narração.
   for (const c of script.cenas) {

@@ -23,9 +23,11 @@ on:
         default: 'true'
         type: choice
         options: ['true', 'false']
-  schedule:
-    - cron: '30 11 29 7 *'   # qua 2026-07-29 08:30 BRT → Carrossel B
-    - cron: '30 11 30 7 *'   # qui 2026-07-30 08:30 BRT → Carrossel C
+  # PAUSADO em 2026-09-14 a pedido do Lucas (mudancas estruturais de conteudo).
+  # Religar = descomentar as linhas abaixo. workflow_dispatch segue ativo pra rodar na mao.
+  # schedule:
+  #   - cron: '30 11 29 7 *'   # qua 2026-07-29 08:30 BRT → Carrossel B
+  #   - cron: '30 11 30 7 *'   # qui 2026-07-30 08:30 BRT → Carrossel C
 
 concurrency:
   group: post-carrossel-expert

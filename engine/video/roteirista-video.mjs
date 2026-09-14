@@ -250,7 +250,7 @@ async function _gerarUma({ tema, resumo, hint } = {}) {
  * modelo dizendo EXATAMENTE o que corrigir (não derruba a run por um campo torto).
  * @returns {Promise<{fps,width,height,cenas:Array}>}
  */
-export async function gerarScriptVideo({ tema, resumo, maxTentativas = 3 } = {}) {
+export async function gerarScriptVideo({ tema, resumo, maxTentativas = 6 } = {}) {
   if (!tema) throw new Error('[roteirista-video] tema obrigatório');
   let lastErr = null;
   for (let attempt = 1; attempt <= maxTentativas; attempt++) {
@@ -261,7 +261,11 @@ export async function gerarScriptVideo({ tema, resumo, maxTentativas = 3 } = {})
       console.warn(`[roteirista-video] tentativa ${attempt}/${maxTentativas} rejeitada: ${e.message}`);
     }
   }
-  throw new Error(`[roteirista-video] falhou após ${maxTentativas} tentativas. Último erro: ${lastErr}`);
+  // Roteiro reprovado pelos validadores NÃO é falha de infraestrutura — é o sistema funcionando.
+  // Marca o erro pra quem chama poder sair limpo em vez de derrubar a run (ver run-video.mjs).
+  const err = new Error(`[roteirista-video] falhou após ${maxTentativas} tentativas. Último erro: ${lastErr}`);
+  err.roteiroReprovado = true;
+  throw err;
 }
 
 // CLI
