@@ -27,10 +27,12 @@ import { existsSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { sufixado } from './canal.mjs';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const REPO = resolve(__dirname, '../..');
-export const PAUTA = resolve(REPO, 'data/pauta.json');
-export const STATUS_FILA = resolve(REPO, 'data/status-fila.json');
+export const PAUTA = resolve(REPO, `data/${sufixado('pauta.json')}`);
+export const STATUS_FILA = resolve(REPO, `data/${sufixado('status-fila.json')}`);
 
 /** lê data/pauta.json (array). Não existe ainda → []. */
 export async function lerPauta() {

@@ -27,9 +27,13 @@ import { existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { sufixado } from './canal.mjs';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const REPO = resolve(__dirname, '../..');
-export const HISTORICO = resolve(REPO, 'data/historico.json');
+// Histórico SEPARADO por canal: tema publicado num canal não pode bloquear o outro —
+// eles devem poder falar do mesmo assunto com ângulos diferentes.
+export const HISTORICO = resolve(REPO, `data/${sufixado('historico.json')}`);
 
 export const JANELA_CATEGORIA = 4; // posts recentes olhados pela R2
 export const LIMIAR_JACCARD = 0.6; // R3

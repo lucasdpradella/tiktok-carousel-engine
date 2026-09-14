@@ -1,0 +1,62 @@
+[
+  {
+    "tema": "A planilha sempre morre em fevereiro",
+    "resumo": "Todo mundo começa o ano anotando gasto numa planilha e para em algumas semanas. O problema não é disciplina, é atrito: abrir o computador pra registrar um café de 8 reais nunca vai competir com não registrar. Fecha mostrando lançamento por mensagem.",
+    "categoria": "comportamento",
+    "trilha": "polvo"
+  },
+  {
+    "tema": "Lançar um gasto sem abrir o aplicativo",
+    "resumo": "Demonstra mandar uma mensagem no WhatsApp ('35 mercado no débito') e o lançamento aparecer organizado. O argumento é a ausência de fricção, não a tecnologia.",
+    "categoria": "produto",
+    "trilha": "demo"
+  },
+  {
+    "tema": "O gasto que você não lembra de ter feito",
+    "resumo": "O dinheiro não some de uma vez, some em pedaços que a memória não guarda. Quem não registra na hora reconstrói o mês por adivinhação — e a adivinhação sempre subestima.",
+    "categoria": "comportamento",
+    "trilha": "polvo"
+  },
+  {
+    "tema": "Dois toques nas costas do celular",
+    "resumo": "Demonstra o atalho do iPhone: Back Tap, valor, onde, forma, cartão, pronto. Mostrar a batidinha nas costas do aparelho é o que faz o vídeo funcionar.",
+    "categoria": "produto",
+    "trilha": "demo"
+  },
+  {
+    "tema": "Por que 'vou anotar depois' nunca acontece",
+    "resumo": "Depois é um lugar onde nada chega. Qualquer sistema de controle que dependa de um segundo momento já nasceu perdendo. O registro tem que caber no mesmo instante do gasto.",
+    "categoria": "comportamento",
+    "trilha": "polvo"
+  },
+  {
+    "tema": "Um placar pra sua disciplina",
+    "resumo": "Demonstra o score de disciplina no topo do app. O ponto não é o número, é ser medido: o que se mede muda de comportamento sozinho.",
+    "categoria": "produto",
+    "trilha": "demo"
+  },
+  {
+    "tema": "Seu dinheiro está em quatro lugares diferentes",
+    "resumo": "Conta corrente, cartão, carteira, aquele dinheiro que alguém te deve. Ninguém soma isso de cabeça, e é por não somar que o mês surpreende.",
+    "categoria": "organizacao",
+    "trilha": "polvo"
+  },
+  {
+    "tema": "Teto por categoria, e o que acontece quando estoura",
+    "resumo": "Demonstra o orçamento por categoria funcionando. Mostrar o limite sendo ultrapassado é mais útil que mostrar o limite sendo respeitado.",
+    "categoria": "produto",
+    "trilha": "demo"
+  },
+  {
+    "tema": "A pergunta é 'vai dar?', não 'quanto eu gastei?'",
+    "resumo": "Controle de gasto olha pra trás. Planejamento olha pra frente e responde se o plano fecha. Demonstra a tela de diagnóstico.",
+    "categoria": "planejamento",
+    "trilha": "demo"
+  },
+  {
+    "tema": "O mês que fecha no azul não é sorte",
+    "resumo": "Fecha a série: quem termina o mês no positivo não ganhou mais, só enxergou antes. Mostra o resumo do mês.",
+    "categoria": "planejamento",
+    "trilha": "demo"
+  }
+]

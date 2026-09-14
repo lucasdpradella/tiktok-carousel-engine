@@ -1,4 +1,10 @@
-name: post-video
+name: post-video-pradex
+# Canal do PRADEX Finanças (@pradexapp) — segundo canal na MESMA engine.
+# Mesmo app de developers do canal pessoal (o app é o cliente, a conta é quem autoriza),
+# então não precisa de audit nova: só do refresh token próprio da conta.
+# Memória separada por CANAL=pradex: temas-video-pradex.json, estado-video-pradex.json,
+# data/pauta-pradex.json, data/historico-pradex.json, docs/post-video-pradex-<data>/.
+# NASCE SEM CRON, de propósito — ver briefing-canal-pradex-tiktok.md.
 
 # §2f — engine de vídeo faceless automática (roteiro → voz clonada → render → inbox).
 #
@@ -28,7 +34,7 @@ on:
   #   - cron: '0 13 * * 3'   # quarta 13h UTC = 10h BRT — religado 2026-07-08 (Gemini validado)
 
 concurrency:
-  group: post-video
+  group: post-video-pradex
   cancel-in-progress: false
 
 permissions:
@@ -43,14 +49,15 @@ jobs:
       VOICE_LATENTS_PASSPHRASE: ${{ secrets.VOICE_LATENTS_PASSPHRASE }}
       TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
-      TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+      CANAL: pradex
+      TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN_PRADEX }}
       COQUI_TOS_AGREED: '1'
       VOICE_LATENTS_PTH: /tmp/speaker_latents.pth
       OPENAI_PYTHON_BIN: python
       DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run || 'true' }}
       MODO_SEMANAL: ${{ vars.MODO_SEMANAL || 'so-video' }}
       # Cross-post IG (full-auto, isolado). Kill-switch via repo VARIABLE — flipar sem commit.
-      IG_CROSSPOST: ${{ vars.IG_CROSSPOST || 'off' }}
+      IG_CROSSPOST: 'off'   # o canal do PRADEX ainda não tem Instagram próprio
       IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
       IG_USER_ID: ${{ secrets.IG_USER_ID }}
       IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
@@ -127,7 +134,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/post-video-20*/ || true
+          git add docs/post-video-pradex-*/ || true
           if git diff --cached --quiet; then
             echo "nada novo em docs/"
           else

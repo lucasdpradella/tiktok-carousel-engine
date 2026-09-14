@@ -21,6 +21,7 @@ import { garantirHashtags } from '../openai/src/hashtags.mjs';
 import { refreshAccessToken, postarVideoInbox, getPostStatus } from '../openai/src/postar.mjs';
 import { lerHistorico, registrarPost, checarCandidato, primeiroElegivel, jaPostouEm, REGRAS_CURADO } from './anti-repeticao.mjs';
 import { lerPauta, proximoPendente, marcarItem, lerAssets, lerCaption, escreverStatusFila } from './pauta.mjs';
+import { CANAL, SUFIXO, sufixado } from './canal.mjs';
 
 // colapsa 3+ letras idênticas seguidas -> 2 (typo de TELA, ex "descorrrelacionado"). Não toca dígitos.
 const colapsa = (s) => (typeof s === 'string' ? s.replace(/([A-Za-zÀ-ÿ])\1{2,}/g, '$1$1') : s);
@@ -35,8 +36,8 @@ function normalizarTela(c) {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(__dirname, '../..');
-const TEMAS = resolve(__dirname, 'temas-video.json');
-const ESTADO = resolve(__dirname, 'estado-video.json');
+const TEMAS = resolve(__dirname, sufixado('temas-video.json'));
+const ESTADO = resolve(__dirname, sufixado('estado-video.json'));
 const REMOTION = resolve(REPO, 'engine/remotion');
 const REMO_SCRIPT = resolve(REMOTION, 'src/script.json');
 const REMO_NARR = resolve(REMOTION, 'public/narracao/processed');
@@ -169,8 +170,8 @@ async function gerar() {
 // gera o vídeo de fato (roteiro → voz XTTS → render Remotion → ffmpeg pace → stage docs)
 async function gerarComRoteirista({ tema, resumo, categoria, origem, pautaId, idx }) {
   // anti-duplo do caminho GERADO: é este que faz stage em docs/post-video-<hoje>.
-  if (!DRY_RUN && existsSync(resolve(DOCS, `post-video-${hoje()}`))) {
-    console.log(`[video] docs/post-video-${hoje()} já existe — post de hoje já saiu. Saindo limpo (anti-duplo).`);
+  if (!DRY_RUN && existsSync(resolve(DOCS, `post-video${SUFIXO}-${hoje()}`))) {
+    console.log(`[video] docs/post-video${SUFIXO}-${hoje()} já existe — post de hoje já saiu. Saindo limpo (anti-duplo).`);
     return;
   }
   console.log(`[video] tema #${idx ?? '-'}: "${tema}" (categoria=${categoria}, origem=${origem}, dryRun=${DRY_RUN}, modoSemanal=${MODO_SEMANAL})`);
@@ -254,7 +255,7 @@ async function gerarComRoteirista({ tema, resumo, categoria, origem, pautaId, id
   }
 
   // 4. stage do MP4 em docs/post-video-DATA (o workflow comita → Pages; depois roda --post)
-  const postDir = `post-video-${hoje()}`;
+  const postDir = `post-video${SUFIXO}-${hoje()}`;
   const destDir = resolve(DOCS, postDir);
   await mkdir(destDir, { recursive: true });
   await copyFile(MP4, resolve(destDir, 'dinheiro-vaza.mp4'));
