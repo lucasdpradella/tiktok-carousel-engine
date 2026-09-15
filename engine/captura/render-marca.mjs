@@ -14,10 +14,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
-const OUT = path.join(AQUI, "out-marca");
 
-const POLVO = process.env.POLVO ||
-  "C:/Users/lucas/OneDrive/Área de Trabalho/Chave Mestre/Projetos/PRADEX/marca/2026-09-14_mascote-polvo_v6.svg";
+// Entra e sai na pasta de marca do PRADEX: o SVG e a fonte, os PNGs sao o produto.
+// Os dois moram juntos de proposito — quem abrir `marca/` ve o mascote e o que saiu dele.
+const MARCA = String.raw`C:\Users\lucas\OneDrive\Área de Trabalho\Chave Mestre\Projetos\PRADEX\marca`;
+const OUT = process.env.PDX_OUT || path.join(MARCA, "canal-tiktok");
+
+// v7 (aprovado 2026-09-14): sem sobrancelha, olho redondo. O v6 lia como vilao no
+// avatar redondo — ver §3.5 do briefing do canal.
+const POLVO = process.env.POLVO || path.join(MARCA, "2026-09-14_mascote-polvo_v7.svg");
 
 // Paleta do canal (briefing §2). Nao inventar cor aqui — ela e decisao de marca.
 const FUNDO = "#0C0E14";

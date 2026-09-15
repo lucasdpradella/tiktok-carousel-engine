@@ -22,7 +22,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
-const OUT = path.join(AQUI, "out");
+
+// A saida mora no PROJETO PRADEX, nao aqui. O codigo vive em C:\Dev (regra dura do
+// vault: nada de repo dentro do OneDrive), mas as imagens sao entregavel do PRADEX e
+// a casa delas e a pasta do projeto — senao o Lucas procura material do app dentro do
+// repo de TikTok, que e o lugar errado.
+const OUT = process.env.PDX_OUT || String.raw`C:\Users\lucas\OneDrive\Área de Trabalho\Chave Mestre\Projetos\PRADEX\capturas-app`;
 
 const APP = process.env.PDX_APP || "https://pradex-financas.vercel.app";
 const EMAIL = process.env.PDX_EMAIL;
