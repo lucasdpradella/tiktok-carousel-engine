@@ -1,0 +1,153 @@
+{
+  "episodio": "01",
+  "titulo": "SÓ HOJE",
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "cenas": [
+    {
+      "id": "01.1",
+      "tipo": "imagem",
+      "arquivo": "01.1_gancho.png",
+      "dur": 2,
+      "texto": null
+    },
+    {
+      "id": "01.2",
+      "tipo": "clip",
+      "arquivo": "01.2_justificativa.mp4",
+      "dur": 3,
+      "texto": [
+        "R$ 47"
+      ],
+      "textoPos": "alto",
+      "tamanho": 110
+    },
+    {
+      "id": "01.3",
+      "tipo": "clip",
+      "arquivo": "01.3_o-corte.mp4",
+      "dur": 2,
+      "texto": null
+    },
+    {
+      "id": "01.4",
+      "tipo": "clip",
+      "arquivo": "01.4_bom-dia.mp4",
+      "dur": 3,
+      "texto": null,
+      "carimbo": true,
+      "tela": {
+        "arquivo": "historico.png",
+        "cantos": [
+          [
+            408,
+            398
+          ],
+          [
+            878,
+            428
+          ],
+          [
+            795,
+            1400
+          ],
+          [
+            310,
+            1360
+          ]
+        ]
+      }
+    },
+    {
+      "id": "01.5",
+      "tipo": "clip",
+      "arquivo": "01.5_a-lista.mp4",
+      "dur": 3.5,
+      "texto": [
+        "R$ 178 no mês"
+      ],
+      "textoPos": "alto",
+      "tamanho": 92,
+      "carimbo": true,
+      "tela": {
+        "arquivo": "dashboard.png",
+        "cantos": [
+          [
+            243,
+            -180
+          ],
+          [
+            863,
+            -180
+          ],
+          [
+            856,
+            1065
+          ],
+          [
+            248,
+            1080
+          ]
+        ]
+      }
+    },
+    {
+      "id": "01.6",
+      "tipo": "clip",
+      "arquivo": "01.6_ele-senta.mp4",
+      "dur": 2.5,
+      "texto": null,
+      "pausa": true
+    },
+    {
+      "id": "01.7",
+      "tipo": "clip",
+      "arquivo": "01.7_um-so.mp4",
+      "dur": 3,
+      "texto": [
+        "Eu só lembrava",
+        "de um."
+      ],
+      "textoPos": "alto"
+    },
+    {
+      "id": "01.8",
+      "tipo": "clip",
+      "arquivo": "01.8_cafe.mp4",
+      "dur": 4,
+      "texto": [
+        "Café · R$ 8 · débito"
+      ],
+      "textoPos": "alto",
+      "tamanho": 78,
+      "polvo": {
+        "arquivo": "polvo_canto_400.png",
+        "larg": 300,
+        "css": "right:56px;bottom:170px"
+      },
+      "carimbo": true,
+      "tela": {
+        "arquivo": "lancar.png",
+        "cantos": [
+          [
+            232,
+            232
+          ],
+          [
+            645,
+            258
+          ],
+          [
+            550,
+            1120
+          ],
+          [
+            165,
+            1075
+          ]
+        ]
+      }
+    }
+  ]
+}
