@@ -1,0 +1,36 @@
+{
+  "episodio": "01",
+  "titulo": "SÓ HOJE",
+
+  "_vozes": "Nomes de voz do XTTS-v2. Rodar `python tts-dorama.py x x --listar` mostra todas. Se algum nome não existir, o script falha ANTES de sintetizar e imprime a lista.",
+  "vozes": {
+    "NARRADOR": "Damien Black",
+    "LEO": "Aaron Dreschner",
+    "PRADEX": "Viktor Menelaos",
+    "MAE": "Sofia Hellen"
+  },
+
+  "_direcao": "O PRADEX lê PLANO. Sem simpatia, sem ironia, sem ênfase. Todo o humor vem do contraste com o drama do Léo — se ele 'atuar', morre.",
+
+  "falas": [
+    { "id": "01.1_n1", "cena": "01.1", "quem": "NARRADOR", "texto": "Naquela sexta, ele jurou que era só hoje." },
+
+    { "id": "01.2_l1", "cena": "01.2", "quem": "LEO", "texto": "Trabalhei a semana toda. Quarenta e sete reais não vão me quebrar." },
+    { "id": "01.2_n1", "cena": "01.2", "quem": "NARRADOR", "texto": "Não iam. Sozinhos, nunca vão." },
+
+    { "id": "01.4_p1", "cena": "01.4", "quem": "PRADEX", "texto": "Bom dia. Lancei quarenta e sete reais em alimentação, ontem." },
+    { "id": "01.4_l1", "cena": "01.4", "quem": "LEO", "texto": "Já sei." },
+
+    { "id": "01.5_p1", "cena": "01.5", "quem": "PRADEX", "texto": "Cento e setenta e oito no mês." },
+    { "id": "01.5_l1", "cena": "01.5", "quem": "LEO", "texto": "Como assim cento e setenta e oito?" },
+    { "id": "01.5_p2", "cena": "01.5", "quem": "PRADEX", "texto": "Quatro pedidos. Dia seis, treze, vinte e ontem." },
+
+    { "id": "01.7_l1", "cena": "01.7", "quem": "LEO", "texto": "Eu só lembrava de um." },
+    { "id": "01.7_n1", "cena": "01.7", "quem": "NARRADOR", "texto": "Não foi o valor que doeu. Foi a lista." },
+    { "id": "01.7_n2", "cena": "01.7", "quem": "NARRADOR", "texto": "Ele fechou o app. Abriu de novo. A lista continuava lá." },
+
+    { "id": "01.8_l1", "cena": "01.8", "quem": "LEO", "texto": "Café, oito reais, débito." },
+    { "id": "01.8_p1", "cena": "01.8", "quem": "PRADEX", "texto": "Lancei." },
+    { "id": "01.8_n1", "cena": "01.8", "quem": "NARRADOR", "texto": "Foi a primeira coisa honesta que ele fez naquela semana." }
+  ]
+}
