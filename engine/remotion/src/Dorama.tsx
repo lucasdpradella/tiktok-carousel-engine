@@ -9,13 +9,16 @@
 
 import React from 'react';
 import {
-  AbsoluteFill, Sequence, Video, Img, staticFile,
+  AbsoluteFill, Sequence, Video, Img, Audio, staticFile,
   useCurrentFrame, useVideoConfig, interpolate,
 } from 'remotion';
 import ep01 from './dorama-ep01.json';
 
 const FUNDO = '#0C0E14';
 const TINTA = '#F1F2F4';
+
+// Duração dos clipes que o gerador devolve. Todos saem iguais.
+const CLIPE_S = 4;
 
 type Canto = [number, number];
 
@@ -33,6 +36,9 @@ type Cena = {
   // Captura real do app encaixada na tela do celular. Os 4 cantos são medidos no
   // frame renderizado, em pixels de 1080×1920, na ordem TL, TR, BR, BL.
   tela?: { arquivo: string; cantos: [Canto, Canto, Canto, Canto] };
+  // Falas da cena, com o instante de entrada em segundos DENTRO da cena. A duração da
+  // cena é derivada delas — ver o passo que reconstrói o tempo a partir de duracoes.json.
+  audio?: { id: string; arquivo: string; em: number }[];
 };
 
 // Homografia do quadrado unitário pros 4 cantos medidos, devolvida como matrix3d.
@@ -122,7 +128,12 @@ const CenaUma: React.FC<{ cena: Cena }> = ({ cena }) => (
     {cena.tipo === 'clip' ? (
       // objectFit cover: os clipes vêm em 2:3 (o gerador não faz 9:16 nativo) e o
       // corte central é o mesmo que já foi validado quadro a quadro nas imagens.
+      // Os clipes do gerador têm 4s e as cenas passaram a durar até 13, porque o tempo
+      // agora vem da narração. Sem desacelerar, o vídeo acaba no meio da cena e o
+      // elemento <video> ERRA — derruba o render inteiro, não é só um frame preto.
+      // Só freia, nunca acelera: cena mais curta que o clipe simplesmente corta.
       <Video src={staticFile(`dorama/${cena.arquivo}`)}
+             playbackRate={Math.min(1, CLIPE_S / cena.dur)}
              style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
     ) : (
       <Img src={staticFile(`dorama/${cena.arquivo}`)}
@@ -149,6 +160,12 @@ const CenaUma: React.FC<{ cena: Cena }> = ({ cena }) => (
                  ...cssParaEstilo(cena.polvo.css) }}
       />
     )}
+
+    {cena.audio?.map((a) => (
+      <Sequence key={a.id} from={Math.round(a.em * 30)}>
+        <Audio src={staticFile(`dorama/${a.arquivo}`)} />
+      </Sequence>
+    ))}
 
     <Texto cena={cena} />
     {cena.carimbo && <Carimbo />}

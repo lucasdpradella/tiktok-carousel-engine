@@ -9,19 +9,38 @@
       "id": "01.1",
       "tipo": "imagem",
       "arquivo": "01.1_gancho.png",
-      "dur": 2,
-      "texto": null
+      "dur": 4.04,
+      "texto": null,
+      "audio": [
+        {
+          "id": "01.1_n1",
+          "arquivo": "voz/01.1_n1.wav",
+          "em": 0
+        }
+      ]
     },
     {
       "id": "01.2",
       "tipo": "clip",
       "arquivo": "01.2_justificativa.mp4",
-      "dur": 3,
+      "dur": 12.09,
       "texto": [
         "R$ 47"
       ],
       "textoPos": "alto",
-      "tamanho": 110
+      "tamanho": 110,
+      "audio": [
+        {
+          "id": "01.2_l1",
+          "arquivo": "voz/01.2_l1.wav",
+          "em": 0
+        },
+        {
+          "id": "01.2_n1",
+          "arquivo": "voz/01.2_n1.wav",
+          "em": 8.38
+        }
+      ]
     },
     {
       "id": "01.3",
@@ -34,7 +53,7 @@
       "id": "01.4",
       "tipo": "clip",
       "arquivo": "01.4_bom-dia.mp4",
-      "dur": 3,
+      "dur": 9.12,
       "texto": null,
       "carimbo": true,
       "tela": {
@@ -57,13 +76,25 @@
             1360
           ]
         ]
-      }
+      },
+      "audio": [
+        {
+          "id": "01.4_p1",
+          "arquivo": "voz/01.4_p1.wav",
+          "em": 0
+        },
+        {
+          "id": "01.4_l1",
+          "arquivo": "voz/01.4_l1.wav",
+          "em": 6.52
+        }
+      ]
     },
     {
       "id": "01.5",
       "tipo": "clip",
       "arquivo": "01.5_a-lista.mp4",
-      "dur": 3.5,
+      "dur": 11.5,
       "texto": [
         "R$ 178 no mês"
       ],
@@ -90,7 +121,24 @@
             1080
           ]
         ]
-      }
+      },
+      "audio": [
+        {
+          "id": "01.5_p1",
+          "arquivo": "voz/01.5_p1.wav",
+          "em": 0
+        },
+        {
+          "id": "01.5_l1",
+          "arquivo": "voz/01.5_l1.wav",
+          "em": 3.04
+        },
+        {
+          "id": "01.5_p2",
+          "arquivo": "voz/01.5_p2.wav",
+          "em": 5.85
+        }
+      ]
     },
     {
       "id": "01.6",
@@ -104,18 +152,35 @@
       "id": "01.7",
       "tipo": "clip",
       "arquivo": "01.7_um-so.mp4",
-      "dur": 3,
+      "dur": 13.26,
       "texto": [
         "Eu só lembrava",
         "de um."
       ],
-      "textoPos": "alto"
+      "textoPos": "alto",
+      "audio": [
+        {
+          "id": "01.7_l1",
+          "arquivo": "voz/01.7_l1.wav",
+          "em": 0
+        },
+        {
+          "id": "01.7_n1",
+          "arquivo": "voz/01.7_n1.wav",
+          "em": 2.25
+        },
+        {
+          "id": "01.7_n2",
+          "arquivo": "voz/01.7_n2.wav",
+          "em": 6.41
+        }
+      ]
     },
     {
       "id": "01.8",
       "tipo": "clip",
       "arquivo": "01.8_cafe.mp4",
-      "dur": 4,
+      "dur": 11.99,
       "texto": [
         "Café · R$ 8 · débito"
       ],
@@ -147,7 +212,24 @@
             1075
           ]
         ]
-      }
+      },
+      "audio": [
+        {
+          "id": "01.8_l1",
+          "arquivo": "voz/01.8_l1.wav",
+          "em": 0
+        },
+        {
+          "id": "01.8_p1",
+          "arquivo": "voz/01.8_p1.wav",
+          "em": 4.44
+        },
+        {
+          "id": "01.8_n1",
+          "arquivo": "voz/01.8_n1.wav",
+          "em": 6.79
+        }
+      ]
     }
   ]
 }
