@@ -95,7 +95,11 @@ def main():
             speed=fala.get("speed", PADRAO.get(personagem, {}).get("speed", 1.0)),
             file_path=bruto,
         )
-        subprocess.run(["ffmpeg", "-y", "-i", bruto, "-af", AF, final],
+        # `-c:a pcm_s16le -ac 1` não é firula: sem forçar, o loudnorm devolve
+        # WAVE_FORMAT_EXTENSIBLE (65534) e o módulo `wave` do Python recusa o arquivo
+        # na hora de medir a duração. O tts_ci.py já fazia isso; alinhado.
+        subprocess.run(["ffmpeg", "-y", "-i", bruto, "-af", AF,
+                        "-ar", "24000", "-ac", "1", "-c:a", "pcm_s16le", final],
                        check=True, capture_output=True)
         os.remove(bruto)
 
