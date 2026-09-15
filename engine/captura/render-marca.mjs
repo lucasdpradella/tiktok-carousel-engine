@@ -20,9 +20,10 @@ const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const MARCA = String.raw`C:\Users\lucas\OneDrive\Área de Trabalho\Chave Mestre\Projetos\PRADEX\marca`;
 const OUT = process.env.PDX_OUT || path.join(MARCA, "canal-tiktok");
 
-// v7 (aprovado 2026-09-14): sem sobrancelha, olho redondo. O v6 lia como vilao no
-// avatar redondo — ver §3.5 do briefing do canal.
-const POLVO = process.env.POLVO || path.join(MARCA, "2026-09-14_mascote-polvo_v7.svg");
+// OFICIAL (escolhido pelo PRADELLA em 2026-09-15): o desenho do antigo "esboco-v2".
+// v5 lia como caveira, v6 como vilao, v7 ficou fofo demais pra app de financas.
+// Este tem atitude sem raiva e sem fofura. Ver §3.5 do briefing do canal.
+const POLVO = process.env.POLVO || path.join(MARCA, "2026-09-15_mascote-polvo_OFICIAL.svg");
 
 // Paleta do canal (briefing §2). Nao inventar cor aqui — ela e decisao de marca.
 const FUNDO = "#0C0E14";
