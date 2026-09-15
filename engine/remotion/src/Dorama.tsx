@@ -17,6 +17,8 @@ import ep01 from './dorama-ep01.json';
 const FUNDO = '#0C0E14';
 const TINTA = '#F1F2F4';
 
+type Canto = [number, number];
+
 type Cena = {
   id: string;
   tipo: 'clip' | 'imagem';
@@ -28,7 +30,34 @@ type Cena = {
   pausa?: boolean;
   carimbo?: boolean;
   polvo?: { arquivo: string; larg: number; css: string };
+  // Captura real do app encaixada na tela do celular. Os 4 cantos são medidos no
+  // frame renderizado, em pixels de 1080×1920, na ordem TL, TR, BR, BL.
+  tela?: { arquivo: string; cantos: [Canto, Canto, Canto, Canto] };
 };
+
+// Homografia do quadrado unitário pros 4 cantos medidos, devolvida como matrix3d.
+//
+// Por que não basta `rotate`: o celular está em perspectiva, não só girado. No 01.4 a
+// borda de cima inclina 3,6° e a da esquerda 5,8° — ângulos diferentes, que é
+// exatamente o que distingue perspectiva de rotação. Colar um retângulo girado deixa a
+// tela "flutuando" por cima do aparelho em vez de dentro dele.
+function matriz3d(c: [Canto, Canto, Canto, Canto]): string {
+  const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = c;
+  const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3;
+  const dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+
+  let a13 = 0, a23 = 0;
+  const den = dx1 * dy2 - dx2 * dy1;
+  if (den !== 0 && (dx3 !== 0 || dy3 !== 0)) {
+    a13 = (dx3 * dy2 - dx2 * dy3) / den;
+    a23 = (dx1 * dy3 - dx3 * dy1) / den;
+  }
+  const a11 = x1 - x0 + a13 * x1, a21 = x3 - x0 + a23 * x3, a31 = x0;
+  const a12 = y1 - y0 + a13 * y1, a22 = y3 - y0 + a23 * y3, a32 = y0;
+
+  // matrix3d é column-major.
+  return `matrix3d(${a11},${a12},0,${a13},${a21},${a22},0,${a23},0,0,1,0,${a31},${a32},0,1)`;
+}
 
 // O `css` do JSON vem como "right:56px;bottom:170px" — mesmo formato usado no
 // montar-quadros.mjs, pra posição do polvo não divergir entre os dois caminhos.
@@ -98,6 +127,19 @@ const CenaUma: React.FC<{ cena: Cena }> = ({ cena }) => (
     ) : (
       <Img src={staticFile(`dorama/${cena.arquivo}`)}
            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    )}
+
+    {cena.tela && (
+      // Sobre o retângulo preto que o gerador deixou. `scale(1/w,1/h)` primeiro leva a
+      // imagem ao quadrado unitário; a matriz então a joga nos 4 cantos medidos.
+      <Img
+        src={staticFile(`dorama/${cena.tela.arquivo}`)}
+        style={{
+          position: 'absolute', top: 0, left: 0, width: 1170, height: 2532,
+          transformOrigin: '0 0',
+          transform: `${matriz3d(cena.tela.cantos)} scale(${1 / 1170}, ${1 / 2532})`,
+        }}
+      />
     )}
 
     {cena.polvo && (
